@@ -1,0 +1,106 @@
+name: Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Set version
+        id: version
+        shell: bash
+        run: |
+          version=1.0
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          [[ "$version" =~ ^[[:alnum:]][[:alnum:].+_-]*$ ]] || { echo 'Invalid APK version'; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - run: npm ci
+      - run: npm test
+
+      - name: Build web app
+        run: npm run build:app
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - run: npx cap sync android
+
+      - name: Build APK
+        working-directory: android
+        shell: bash
+        env:
+          ANDROID_VERSION_NAME: ${{ steps.version.outputs.version }}
+          ANDROID_VERSION_CODE: ${{ github.run_number }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [[ -n "$ANDROID_KEYSTORE_BASE64" && -n "$ANDROID_KEYSTORE_PASSWORD" && -n "$ANDROID_KEY_ALIAS" && -n "$ANDROID_KEY_PASSWORD" ]]; then
+            export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/telauto-release.keystore"
+            umask 077
+            printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$ANDROID_KEYSTORE_PATH"
+            ./gradlew assembleRelease
+            apk=app/build/outputs/apk/release/app-release.apk
+          else
+            ./gradlew assembleDebug
+            apk=app/build/outputs/apk/debug/app-debug.apk
+          fi
+          mkdir -p "$GITHUB_WORKSPACE/apk"
+          cp "$apk" "$GITHUB_WORKSPACE/apk/telauto-${ANDROID_VERSION_NAME}.apk"
+
+      - name: Remove signing keystore
+        if: always()
+        shell: bash
+        run: rm -f -- "$RUNNER_TEMP/telauto-release.keystore"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: telauto-${{ steps.version.outputs.version }}.apk
+          path: apk/telauto-${{ steps.version.outputs.version }}.apk
+          if-no-files-found: error
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: telauto-${{ needs.build.outputs.version }}.apk
+          path: apk
+
+      - name: Publish GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          APK_VERSION: ${{ needs.build.outputs.version }}
+        run: gh release create "$RELEASE_TAG" "apk/telauto-${APK_VERSION}.apk" --verify-tag --title "$RELEASE_TAG" --generate-notes
