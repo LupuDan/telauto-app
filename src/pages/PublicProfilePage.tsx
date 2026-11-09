@@ -1,3 +1,5 @@
+import { IS_APP } from '../native'
+import { useScreenHeader } from '../appshell'
 import { useTranslation } from 'react-i18next'
 import { ChevronLeft } from 'lucide-react'
 import { Link, useNavigate, useParams } from 'react-router'
@@ -24,6 +26,7 @@ export function PublicProfilePage() {
   const localities = useLocalities()
 
   const name = profile.data?.display_name || t('profile.unnamed')
+  useScreenHeader(IS_APP ? { title: name } : {})
   usePageMeta(profile.data ? t('profile.metaTitle', { name }) : t('profile.notFoundTitle'))
 
   if (validId && profile.isPending) return <LoadingState />
@@ -48,12 +51,12 @@ export function PublicProfilePage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <BackButton />
+      {!IS_APP && <BackButton />}
       <section className="flex items-center gap-4 rounded-card border border-line bg-surface p-5">
         <Avatar name={name} src={avatarUrl(data.avatar_path)} size="2xl" />
         <div className="min-w-0">
           {/* user text is rendered as plain text by React (no HTML) */}
-          <h1 className="truncate type-h1 text-ink">{name}</h1>
+          <h1 className={IS_APP ? 'sr-only' : 'truncate type-h1 text-ink'}>{name}</h1>
           <p className="text-sm text-muted">
             {locality ? localizedName(locality, i18n.resolvedLanguage) : t('profile.noLocality')}
           </p>

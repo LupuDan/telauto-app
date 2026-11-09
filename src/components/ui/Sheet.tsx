@@ -1,3 +1,4 @@
+import { useBackHandler } from '../../native'
 import { X } from 'lucide-react'
 import { useEffect, useRef, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -27,6 +28,10 @@ export function Sheet({
 }) {
   const { t } = useTranslation()
   const ref = useRef<HTMLDialogElement>(null)
+  useBackHandler(() => {
+    onClose()
+    return true
+  }, open)
 
   useEffect(() => {
     const dialog = ref.current
@@ -53,7 +58,7 @@ export function Sheet({
         if (event.key !== 'Tab' || !ref.current) return
         const focusable = [
           ...ref.current.querySelectorAll<HTMLElement>(
-            'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+            'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
           ),
         ].filter((element) => element.offsetParent !== null)
         const first = focusable[0]

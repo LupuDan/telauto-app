@@ -1,3 +1,4 @@
+import { IS_APP, openExternal } from '../../native'
 import { Pencil, Phone } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -60,7 +61,15 @@ export function SellerBox({ listing }: { listing: ListingDetails }) {
  * Visitors who press "Arată telefonul" get a short window: "Intră în cont ca să vezi numărul".
  * The owner sees "Editează" instead.
  */
-export function ContactActions({ listing, contact, layout }: { listing: ListingDetails; contact: Contact; layout: 'bar' | 'panel' }) {
+export function ContactActions({
+  listing,
+  contact,
+  layout,
+}: {
+  listing: ListingDetails
+  contact: Contact
+  layout: 'bar' | 'panel'
+}) {
   const { t } = useTranslation()
   const { user } = useAuth()
   const [loginOpen, setLoginOpen] = useState(false)
@@ -95,9 +104,20 @@ export function ContactActions({ listing, contact, layout }: { listing: ListingD
         <MessageButton listingId={listing.id} className={tight} />
         {contact.data ? (
           phone ? (
-            <a href={`tel:${phone}`} className={`${buttonClass('secondary', 'normal', true)} tabular whitespace-nowrap ${tight}`}>
+            <a
+              onClick={
+                IS_APP
+                  ? (event) => {
+                      event.preventDefault()
+                      openExternal(`tel:${phone}`)
+                    }
+                  : undefined
+              }
+              href={`tel:${phone}`}
+              className={`${buttonClass('secondary', 'normal', true)} tabular whitespace-nowrap ${tight}`}
+            >
               <Phone aria-hidden="true" className="size-5 shrink-0" strokeWidth={1.75} />
-              {phone}
+              {IS_APP ? t('appShell.call') : phone}
             </a>
           ) : (
             <p className="flex items-center text-sm text-muted">{t('listing.noPhone')}</p>
@@ -114,9 +134,7 @@ export function ContactActions({ listing, contact, layout }: { listing: ListingD
         open={loginOpen}
         onClose={() => setLoginOpen(false)}
         title={
-          privateLabel
-            ? t('listing.loginModalTitlePrivate', { field: privateLabel })
-            : t('listing.loginModalTitle')
+          privateLabel ? t('listing.loginModalTitlePrivate', { field: privateLabel }) : t('listing.loginModalTitle')
         }
       >
         <p className="text-muted">

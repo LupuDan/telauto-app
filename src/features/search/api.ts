@@ -1,4 +1,5 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { IS_APP } from '../../native'
 import type { StoredAttributes } from '../../lib/categories'
 import { supabase } from '../../lib/supabase'
 import type { SearchArgs } from './filters'
@@ -61,4 +62,29 @@ export function useSearchListings(args: SearchArgs, enabled = true) {
     enabled,
     staleTime: 10_000,
   })
+}
+
+export function useBrowseListings(args: SearchArgs) {
+  const paged = useSearchListings(args, !IS_APP)
+  const normalized = { ...args, p_offset: 0 }
+  const infinite = useInfiniteQuery({
+    queryKey: ['search', 'infinite', normalized],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => searchListings({ ...normalized, p_offset: pageParam }),
+    getNextPageParam: (last, pages) => {
+      const loaded = pages.reduce((sum, page) => sum + page.items.length, 0)
+      return last.items.length && loaded < last.total ? loaded : undefined
+    },
+    enabled: IS_APP,
+    staleTime: 10_000,
+  })
+  return IS_APP
+    ? {
+        ...infinite,
+        isPlaceholderData: false,
+        data: infinite.data
+          ? { total: infinite.data.pages[0].total, items: infinite.data.pages.flatMap((page) => page.items) }
+          : undefined,
+      }
+    : { ...paged, fetchNextPage: infinite.fetchNextPage, hasNextPage: false, isFetchingNextPage: false }
 }

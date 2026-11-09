@@ -1,4 +1,6 @@
-﻿import { ArrowUpDown, SlidersHorizontal } from 'lucide-react'
+﻿import { IS_APP } from '../../native'
+import { LoadMoreSentinel, SkeletonCardGrid, useScreenHeader } from '../../appshell'
+import { ArrowUpDown, SlidersHorizontal } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router'
@@ -15,7 +17,7 @@ import { categoryBySlug, type CategoryConfig } from '../../lib/categories'
 import { formatNumber } from '../../lib/format'
 import { MyCarFilter } from '../garage/MyCarFilter'
 import { ActiveFilters } from './ActiveFilters'
-import { searchListings, useSearchListings, type ListingSummary } from './api'
+import { searchListings, useBrowseListings, useSearchListings, type ListingSummary } from './api'
 import { FilterPanel } from './FilterPanel'
 import {
   countActiveFilters,
@@ -55,7 +57,8 @@ export function SearchResults({ category, heading }: { category?: CategoryConfig
 
   const filters = useMemo(() => parseFilters(params, category), [params, category])
   const args = useMemo(() => filtersToSearchArgs(filters, category), [filters, category])
-  const result = useSearchListings(args)
+  const result = useBrowseListings(args)
+  useScreenHeader(IS_APP ? { title: heading } : {})
 
   const basePath = category ? `/c/${category.slug}` : '/search'
   const hrefFor = (next: SearchFilters, path = basePath) => {
@@ -79,7 +82,7 @@ export function SearchResults({ category, heading }: { category?: CategoryConfig
       const draftCategory = categoryBySlug(categorySlug) ?? category
       setDraftArgs({ ...filtersToSearchArgs({ ...draft, page: 1 }, draftCategory), p_limit: 1, p_offset: 0 })
     },
-    [category],
+    [category]
   )
   const debouncedDraftArgs = useDebounced(draftArgs)
   const draftCount = useSearchListings(debouncedDraftArgs, panelOpen)
@@ -105,7 +108,7 @@ export function SearchResults({ category, heading }: { category?: CategoryConfig
 
   // new page or new filters: start at the top of the list
   useEffect(() => {
-    window.scrollTo({ top: 0 })
+    if (!IS_APP) window.scrollTo({ top: 0 })
   }, [params])
 
   const total = result.data?.total ?? 0
@@ -133,12 +136,12 @@ export function SearchResults({ category, heading }: { category?: CategoryConfig
   return (
     <div className="space-y-4">
       <div className="space-y-1">
-        <h1 className="type-h1 break-words text-ink">{heading}</h1>
+        <h1 className={IS_APP ? 'sr-only' : 'type-h1 break-words text-ink'}>{heading}</h1>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <p className="text-muted tabular" aria-live="polite">
             {result.data ? countText(total) : ' '}
           </p>
-          <div className="hidden items-center gap-2 lg:flex">
+          <div className={IS_APP ? 'hidden' : 'hidden items-center gap-2 lg:flex'}>
             <label htmlFor="sort-desktop" className="text-sm text-muted">
               {t('search.sortButton')}:
             </label>
@@ -148,7 +151,13 @@ export function SearchResults({ category, heading }: { category?: CategoryConfig
       </div>
 
       {/* phones and tablets: two equal buttons */}
-      <div className="grid grid-cols-2 gap-2 lg:hidden">
+      <div
+        className={
+          IS_APP
+            ? 'sticky top-[calc(4rem+var(--app-inset-top))] z-20 grid grid-cols-2 gap-2 bg-paper py-2'
+            : 'grid grid-cols-2 gap-2 lg:hidden'
+        }
+      >
         <Button variant="secondary" onClick={() => setPanelOpen(true)}>
           <SlidersHorizontal aria-hidden="true" className="size-5" strokeWidth={1.75} />
           {activeCount > 0 ? `${t('search.filtersButton')} (${activeCount})` : t('search.filtersButton')}
@@ -166,11 +175,15 @@ export function SearchResults({ category, heading }: { category?: CategoryConfig
 
       <ActiveFilters filters={filters} category={category} hrefFor={(next) => hrefFor(next)} clearHref={basePath} />
 
-      <div className="lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start lg:gap-6">
+      <div className={IS_APP ? '' : 'lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start lg:gap-6'}>
         {/* computers: the column stays in view below the header and scrolls inside if taller than the screen */}
         <aside
           aria-label={t('search.filtersTitle')}
-          className="hidden lg:sticky lg:top-[5.25rem] lg:flex lg:max-h-[calc(100dvh-6.5rem)] lg:flex-col lg:overflow-hidden lg:rounded-panel lg:border lg:border-line lg:bg-surface"
+          className={
+            IS_APP
+              ? 'hidden'
+              : 'hidden lg:sticky lg:top-[5.25rem] lg:flex lg:max-h-[calc(100dvh-6.5rem)] lg:flex-col lg:overflow-hidden lg:rounded-panel lg:border lg:border-line lg:bg-surface'
+          }
         >
           <h2 className="border-b border-line px-4 py-3 type-h2">{t('search.filtersTitle')}</h2>
           <div className="min-h-0 flex-1 overflow-y-auto p-4">
@@ -197,17 +210,21 @@ export function SearchResults({ category, heading }: { category?: CategoryConfig
                     compatMake: vehicle ? String(vehicle.makeId) : '',
                     compatModel: vehicle?.modelId ? String(vehicle.modelId) : '',
                     compatYear: vehicle ? String(vehicle.year) : '',
-                  }),
+                  })
                 )
               }
             />
           )}
 
           {result.isPending ? (
-            <ListingGridSkeleton columns={3} count={9} />
-          ) : result.isError ? (
+            IS_APP ? (
+              <SkeletonCardGrid count={9} />
+            ) : (
+              <ListingGridSkeleton columns={3} count={9} />
+            )
+          ) : result.isError && (!IS_APP || !result.data) ? (
             <ErrorState error={result.error} onRetry={() => void result.refetch()} />
-          ) : result.data.items.length === 0 ? (
+          ) : result.data?.items.length === 0 ? (
             <EmptyState
               text={t('search.emptyText')}
               action={
@@ -220,19 +237,36 @@ export function SearchResults({ category, heading }: { category?: CategoryConfig
             />
           ) : (
             <div className={result.isPlaceholderData ? 'opacity-60 transition-opacity' : undefined}>
-              <ListingGrid listings={[...result.data.items, ...extra]} columns={3} />
+              <ListingGrid listings={[...(result.data?.items ?? []), ...(IS_APP ? [] : extra)]} columns={3} />
             </div>
           )}
 
-          {result.data && (filters.page - 1) * PAGE_SIZE + PAGE_SIZE + extra.length < total && (
+          {!IS_APP && result.data && (filters.page - 1) * PAGE_SIZE + PAGE_SIZE + extra.length < total && (
             <div className="flex flex-col items-center gap-2 lg:hidden">
-              <Button variant="secondary" fullWidth loading={more.loading && more.key === argsKey} onClick={() => void loadMore()}>
+              <Button
+                variant="secondary"
+                fullWidth
+                loading={more.loading && more.key === argsKey}
+                onClick={() => void loadMore()}
+              >
                 {t('search.loadMore')}
               </Button>
               {more.error && more.key === argsKey && <p className="text-sm text-danger">{t('errors.network')}</p>}
             </div>
           )}
-          <div className="hidden lg:block">
+          {IS_APP && result.data && (
+            <LoadMoreSentinel
+              onReachEnd={() => void result.fetchNextPage()}
+              loading={result.isFetchingNextPage}
+              done={!result.hasNextPage}
+              enabled={!result.isError}
+            />
+          )}
+          {IS_APP && result.isFetchingNextPage && <SkeletonCardGrid />}
+          {IS_APP && result.isError && result.data && (
+            <ErrorState error={result.error} onRetry={() => void result.fetchNextPage()} />
+          )}
+          <div className={IS_APP ? 'hidden' : 'hidden lg:block'}>
             <Pagination page={filters.page} pageCount={pageCount} hrefFor={(page) => hrefFor({ ...filters, page })} />
           </div>
         </section>
@@ -245,10 +279,12 @@ export function SearchResults({ category, heading }: { category?: CategoryConfig
         full
         footer={
           <Button type="submit" form="filters-mobile" fullWidth loading={draftCount.isFetching && !draftCount.data}>
-            {draftCount.data ? t('search.show', { count: draftCount.data.total }).replace(
-              String(draftCount.data.total),
-              formatNumber(draftCount.data.total, lng),
-            ) : t('search.apply')}
+            {draftCount.data
+              ? t('search.show', { count: draftCount.data.total }).replace(
+                  String(draftCount.data.total),
+                  formatNumber(draftCount.data.total, lng)
+                )
+              : t('search.apply')}
           </Button>
         }
       >

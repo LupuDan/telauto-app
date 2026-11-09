@@ -1,3 +1,4 @@
+import { IS_APP, haptic } from '../../native'
 import { Heart } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -25,7 +26,10 @@ export function FavoriteButton({ listingId }: { listingId: string }) {
       navigate(`/login?next=${encodeURIComponent(location.pathname + location.search)}`)
       return
     }
-    if (!saved) setPulse((value) => value + 1)
+    if (!saved) {
+      setPulse((value) => value + 1)
+      if (IS_APP) haptic('light')
+    }
     toggle.mutate({ listingId, save: !saved })
     // "Scos din favorite" with "Anulează" for 5 seconds (plan de design, 6.6)
     if (saved) {
@@ -49,7 +53,9 @@ export function FavoriteButton({ listingId }: { listingId: string }) {
         <Heart
           key={pulse}
           aria-hidden="true"
-          className={`size-5 ${saved ? 'fill-danger text-danger' : ''} ${pulse ? 'animate-[heart-pulse_300ms_ease-out]' : ''}`}
+          className={`size-5 ${saved ? 'fill-danger text-danger' : ''} ${
+            pulse ? 'animate-[heart-pulse_300ms_ease-out]' : ''
+          }`}
           strokeWidth={1.75}
         />
       </span>

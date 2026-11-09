@@ -1,5 +1,6 @@
+import { IS_APP, useBackHandler, useAllowRotation } from '../../native'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CategoryIcon } from '../../components/CategoryIcon'
 import type { CategoryIconName } from '../../lib/categories'
@@ -23,9 +24,25 @@ export function ListingGallery({
   actions?: ReactNode
 }) {
   const { t } = useTranslation()
-  const [index, setIndex] = useState(0)
+  const [index, updateIndex] = useState(0)
   const stripRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const [open, setOpen] = useState(false)
+  const [zoom, setZoom] = useState(1)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const gesture = useRef({ x: 0, y: 0, distance: 0, zoom: 1, panX: 0, panY: 0, pinched: false })
+  useBackHandler(() => {
+    dialogRef.current?.close()
+    return true
+  }, IS_APP && open)
+  useAllowRotation(IS_APP && open)
+  const setIndex = useCallback((next: number | ((value: number) => number)) => {
+    updateIndex(next)
+    if (IS_APP) {
+      setZoom(1)
+      setPan({ x: 0, y: 0 })
+    }
+  }, [])
   const alt = (n: number) => t('listing.photoAlt', { n: n + 1, total: photos.length, title })
 
   function goTo(next: number) {
@@ -52,7 +69,7 @@ export function ListingGallery({
     }
     dialog.addEventListener('keydown', onKey)
     return () => dialog.removeEventListener('keydown', onKey)
-  }, [photos.length])
+  }, [photos.length, setIndex])
 
   const frame = '-mx-4 overflow-hidden bg-paper sm:mx-0 sm:rounded-card md:-mx-0'
 
@@ -87,6 +104,7 @@ export function ListingGallery({
               onClick={() => {
                 setIndex(photoIndex)
                 dialogRef.current?.showModal()
+                if (IS_APP) setOpen(true)
               }}
               className="size-full shrink-0 snap-center focus-visible:outline-offset-[-4px]"
               aria-label={t('listing.openPhoto', { n: photoIndex + 1, total: photos.length })}
@@ -165,6 +183,11 @@ export function ListingGallery({
         aria-label={title}
         className="m-0 h-full max-h-none w-full max-w-none bg-black p-0 text-white backdrop:bg-black"
         onClose={() => {
+          setOpen(false)
+          if (IS_APP) {
+            setZoom(1)
+            setPan({ x: 0, y: 0 })
+          }
           // show the same photo in the page gallery after closing
           const strip = stripRef.current
           if (strip) strip.scrollTo({ left: index * strip.clientWidth })
@@ -173,13 +196,73 @@ export function ListingGallery({
           if (event.target === event.currentTarget) dialogRef.current?.close()
         }}
       >
-        <div className="relative flex h-full items-center justify-center">
-          <img src={publicPhotoUrl(photos[index])} alt={alt(index)} className="max-h-full max-w-full object-contain" />
+        <div
+          className="relative flex h-full items-center justify-center"
+          style={IS_APP ? { touchAction: 'none' } : undefined}
+          onTouchStart={
+            IS_APP
+              ? (event) => {
+                  const a = event.touches[0],
+                    b = event.touches[1]
+                  gesture.current = {
+                    x: a.clientX,
+                    y: a.clientY,
+                    distance: b ? Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) : 0,
+                    zoom,
+                    panX: pan.x,
+                    panY: pan.y,
+                    pinched: !!b,
+                  }
+                }
+              : undefined
+          }
+          onTouchMove={
+            IS_APP
+              ? (event) => {
+                  const a = event.touches[0],
+                    b = event.touches[1],
+                    start = gesture.current
+                  if (b && start.distance) {
+                    start.pinched = true
+                    setZoom(
+                      Math.max(
+                        1,
+                        Math.min(
+                          5,
+                          (start.zoom * Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)) / start.distance
+                        )
+                      )
+                    )
+                  } else if (zoom > 1)
+                    setPan({ x: start.panX + a.clientX - start.x, y: start.panY + a.clientY - start.y })
+                }
+              : undefined
+          }
+          onTouchEnd={
+            IS_APP
+              ? (event) => {
+                  const start = gesture.current
+                  if (event.touches.length || start.pinched || zoom > 1) return
+                  const dx = event.changedTouches[0].clientX - start.x
+                  const dy = event.changedTouches[0].clientY - start.y
+                  if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy))
+                    setIndex((value) => Math.max(0, Math.min(photos.length - 1, value + (dx < 0 ? 1 : -1))))
+                }
+              : undefined
+          }
+        >
+          <img
+            draggable={IS_APP ? false : undefined}
+            style={IS_APP ? { transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` } : undefined}
+            src={publicPhotoUrl(photos[index])}
+            alt={alt(index)}
+            className="max-h-full max-w-full object-contain"
+          />
           <button
             type="button"
             onClick={() => dialogRef.current?.close()}
             className="absolute top-3 right-3 flex size-11 items-center justify-center rounded-full bg-white/15 hover:bg-white/25"
-            aria-label={t('listing.closePhoto')}
+            aria-label={t(IS_APP ? 'appShell.closeGallery' : 'listing.closePhoto')}
           >
             <X aria-hidden="true" className="size-6" strokeWidth={1.75} />
           </button>
@@ -204,7 +287,9 @@ export function ListingGallery({
             </button>
           )}
           <span className="absolute bottom-4 rounded-full bg-black/60 px-3 py-1 text-sm tabular">
-            {index + 1} / {photos.length}
+            {IS_APP
+              ? t('appShell.galleryCounter', { current: index + 1, total: photos.length })
+              : `${index + 1} / ${photos.length}`}
           </span>
         </div>
       </dialog>

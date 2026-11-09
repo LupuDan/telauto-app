@@ -1,3 +1,5 @@
+import { IS_APP, shareLink } from '../native'
+import { appBottomPanelClass, useScreenHeader } from '../appshell'
 import { CircleCheck, MapPin, Share2 } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -44,7 +46,7 @@ export function ListingPage() {
   const data = listing.data
   usePageMeta(
     data ? `${data.title} – Telauto.md` : t('errors.listingNotFound'),
-    data ? data.description.slice(0, 160) : undefined,
+    data ? data.description.slice(0, 160) : undefined
   )
 
   // opening another listing (e.g. from "similar") starts at the top
@@ -85,7 +87,9 @@ function ShareButton({ title }: { title: string }) {
   async function share() {
     const url = getSiteBaseUrl() + window.location.hash
     try {
-      if (navigator.share) await navigator.share({ title, url })
+      if (IS_APP) {
+        if ((await shareLink({ title, url })) === 'copied') toast(t('listing.linkCopied'))
+      } else if (navigator.share) await navigator.share({ title, url })
       else {
         await navigator.clipboard.writeText(url)
         toast(t('listing.linkCopied'))
@@ -127,6 +131,7 @@ function ListingView({
   visibleToAll: boolean
 }) {
   const { t, i18n } = useTranslation()
+  useScreenHeader(IS_APP ? { title: listing.title } : {})
   const lng = i18n.resolvedLanguage
   const localities = useLocalities()
   const locality = localities.data?.find((item) => item.id === listing.localityId)
@@ -162,7 +167,7 @@ function ListingView({
 
   return (
     <div className="space-y-8">
-      <nav aria-label={t('listing.breadcrumb')} className="hidden text-sm text-muted lg:block">
+      <nav aria-label={t('listing.breadcrumb')} className={IS_APP ? 'hidden' : 'hidden text-sm text-muted lg:block'}>
         <ol className="flex flex-wrap items-center gap-1.5">
           <li>
             <Link to="/" className="hover:text-brand hover:underline">
@@ -188,7 +193,7 @@ function ListingView({
         </Alert>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,65fr)_minmax(0,35fr)] lg:gap-8">
+      <div className={IS_APP ? 'grid gap-6' : 'grid gap-6 lg:grid-cols-[minmax(0,65fr)_minmax(0,35fr)] lg:gap-8'}>
         <div className="-mt-6 min-w-0 space-y-6 sm:mt-0 lg:-mt-0">
           <ListingGallery
             photos={listing.photos}
@@ -203,7 +208,7 @@ function ListingView({
           />
 
           {/* phones: price and title right under the gallery */}
-          <div className="lg:hidden">{summary}</div>
+          <div className={IS_APP ? '' : 'lg:hidden'}>{summary}</div>
 
           <section aria-labelledby="characteristics-heading" className="space-y-3">
             <h2 id="characteristics-heading" className="type-h2 text-ink">
@@ -228,14 +233,14 @@ function ListingView({
 
           {listing.description && <Description text={listing.description} />}
 
-          <div className="space-y-4 lg:hidden">
+          <div className={IS_APP ? 'space-y-4' : 'space-y-4 lg:hidden'}>
             {safety}
             <PrivateValues contact={contact} />
             <SellerBox listing={listing} />
           </div>
         </div>
 
-        <aside className="hidden lg:block">
+        <aside className={IS_APP ? 'hidden' : 'hidden lg:block'}>
           <div className="space-y-4 lg:sticky lg:top-[5.25rem]">
             <div className="space-y-4 rounded-panel border border-line bg-surface p-5">
               {summary}
@@ -257,7 +262,13 @@ function ListingView({
       )}
 
       {/* phones and tablets: the two contact buttons stay at the bottom of the screen */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-float lg:hidden">
+      <div
+        className={
+          IS_APP
+            ? `${appBottomPanelClass} border-t border-line px-4 pt-3 shadow-float`
+            : 'fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-float lg:hidden'
+        }
+      >
         <div className="mx-auto max-w-xl">
           <ContactActions listing={listing} contact={contact} layout="bar" />
         </div>
@@ -311,8 +322,8 @@ function Compatibility({ rows }: { rows: CompatibilityRow[] }) {
         row.makeId === vehicle.makeId &&
         (row.modelId === null || row.modelId === vehicle.modelId) &&
         vehicle.year >= row.yearFrom &&
-        vehicle.year <= row.yearTo,
-    ),
+        vehicle.year <= row.yearTo
+    )
   )
 
   return (

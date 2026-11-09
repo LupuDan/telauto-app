@@ -1,3 +1,5 @@
+import { IS_APP } from '../native'
+import { useScreenHeader } from '../appshell'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
 import { usePageMeta } from '../app/usePageMeta'
@@ -19,9 +21,10 @@ export function StaticPage() {
   const { page } = useParams()
   const name = STATIC_PAGES.find((item) => item === page)
   const title = name ? translateKey(t, `pages.${name}.title`) : ''
+  useScreenHeader(IS_APP ? { title: title } : {})
   usePageMeta(
     name ? `${title} – Telauto.md` : t('notFound.metaTitle'),
-    name ? translateKey(t, `pages.${name}.metaDescription`) : undefined,
+    name ? translateKey(t, `pages.${name}.metaDescription`) : undefined
   )
 
   if (!name) return <NotFoundPage />
@@ -30,7 +33,7 @@ export function StaticPage() {
   return (
     <article className="mx-auto max-w-3xl space-y-6">
       <header className="space-y-2">
-        <h1 className="type-h1 text-ink">{title}</h1>
+        <h1 className={IS_APP ? 'sr-only' : 'type-h1 text-ink'}>{title}</h1>
         <p className="text-sm text-muted">
           {t('pages.common.updated', { date: formatDate(LAST_UPDATED, i18n.resolvedLanguage) })}
         </p>

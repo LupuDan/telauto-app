@@ -12,7 +12,9 @@ import { inputClass } from '../components/ui/fieldStyles'
 import { Sheet } from '../components/ui/Sheet'
 import { GarageHomeModule } from '../features/garage/GarageHomeModule'
 import { useLocalities } from '../features/reference/hooks'
-import { useSearchListings } from '../features/search/api'
+import { IS_APP } from '../native'
+import { LoadMoreSentinel, SkeletonCardGrid } from '../appshell'
+import { useBrowseListings, useSearchListings } from '../features/search/api'
 import { CATEGORIES, CATEGORY_SLUGS, type CategoryConfig, type CategoryModule } from '../lib/categories'
 import { formatNumber, localizedName } from '../lib/format'
 
@@ -29,7 +31,7 @@ const MODULES: Record<CategoryModule, () => ReactNode> = {
 export function HomePage() {
   const { t } = useTranslation()
   usePageMeta(t('home.metaTitle'), t('home.metaDescription'))
-  const latest = useSearchListings(LATEST_ARGS)
+  const latest = useBrowseListings(LATEST_ARGS)
   const categories = CATEGORY_SLUGS.map((slug) => CATEGORIES[slug])
   const modules = [
     ...new Set(categories.map((category) => category.homeModule).filter((module) => module !== undefined)),
@@ -39,7 +41,7 @@ export function HomePage() {
     <div className="space-y-10">
       <section className="max-w-3xl space-y-5 pt-2 lg:pt-6">
         <h1 className="type-display text-ink">{t('home.heading')}</h1>
-        <HomeSearch />
+        {!IS_APP && <HomeSearch />}
       </section>
 
       <section aria-label={t('home.categoriesHeading')}>
@@ -60,13 +62,29 @@ export function HomePage() {
           </Link>
         </div>
         {latest.isPending ? (
-          <ListingGridSkeleton />
-        ) : latest.isError ? (
+          IS_APP ? (
+            <SkeletonCardGrid />
+          ) : (
+            <ListingGridSkeleton />
+          )
+        ) : latest.isError && (!IS_APP || !latest.data) ? (
           <ErrorState error={latest.error} onRetry={() => void latest.refetch()} />
-        ) : latest.data.items.length === 0 ? (
+        ) : latest.data?.items.length === 0 ? (
           <EmptyState text={t('home.latestEmpty')} />
         ) : (
-          <ListingGrid listings={latest.data.items} />
+          <ListingGrid listings={latest.data?.items ?? []} />
+        )}
+        {IS_APP && latest.data && (
+          <LoadMoreSentinel
+            onReachEnd={() => void latest.fetchNextPage()}
+            loading={latest.isFetchingNextPage}
+            done={!latest.hasNextPage}
+            enabled={!latest.isError}
+          />
+        )}
+        {IS_APP && latest.isFetchingNextPage && <SkeletonCardGrid />}
+        {IS_APP && latest.isError && latest.data && (
+          <ErrorState error={latest.error} onRetry={() => void latest.fetchNextPage()} />
         )}
       </section>
     </div>
