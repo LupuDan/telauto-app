@@ -7,8 +7,8 @@ android {
         applicationId "md.telauto.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode (System.getenv('ANDROID_VERSION_CODE') ?: project.findProperty('ANDROID_VERSION_CODE') ?: '1').toString().toInteger()
-        versionName (System.getenv('ANDROID_VERSION_NAME') ?: project.findProperty('ANDROID_VERSION_NAME') ?: '1.0').toString()
+        versionCode = (System.getenv('ANDROID_VERSION_CODE') ?: project.findProperty('ANDROID_VERSION_CODE') ?: '1').toString().toInteger()
+        versionName = (System.getenv('ANDROID_VERSION_NAME') ?: project.findProperty('ANDROID_VERSION_NAME') ?: '1.0').toString()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
