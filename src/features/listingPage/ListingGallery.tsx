@@ -229,9 +229,9 @@ export function ListingGallery({
                         1,
                         Math.min(
                           5,
-                          (start.zoom * Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)) / start.distance
-                        )
-                      )
+                          (start.zoom * Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)) / start.distance,
+                        ),
+                      ),
                     )
                   } else if (zoom > 1)
                     setPan({ x: start.panX + a.clientX - start.x, y: start.panY + a.clientY - start.y })

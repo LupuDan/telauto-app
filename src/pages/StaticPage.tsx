@@ -24,7 +24,7 @@ export function StaticPage() {
   useScreenHeader(IS_APP ? { title: title } : {})
   usePageMeta(
     name ? `${title} – Telauto.md` : t('notFound.metaTitle'),
-    name ? translateKey(t, `pages.${name}.metaDescription`) : undefined
+    name ? translateKey(t, `pages.${name}.metaDescription`) : undefined,
   )
 
   if (!name) return <NotFoundPage />

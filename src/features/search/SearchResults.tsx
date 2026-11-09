@@ -82,7 +82,7 @@ export function SearchResults({ category, heading }: { category?: CategoryConfig
       const draftCategory = categoryBySlug(categorySlug) ?? category
       setDraftArgs({ ...filtersToSearchArgs({ ...draft, page: 1 }, draftCategory), p_limit: 1, p_offset: 0 })
     },
-    [category]
+    [category],
   )
   const debouncedDraftArgs = useDebounced(draftArgs)
   const draftCount = useSearchListings(debouncedDraftArgs, panelOpen)
@@ -210,7 +210,7 @@ export function SearchResults({ category, heading }: { category?: CategoryConfig
                     compatMake: vehicle ? String(vehicle.makeId) : '',
                     compatModel: vehicle?.modelId ? String(vehicle.modelId) : '',
                     compatYear: vehicle ? String(vehicle.year) : '',
-                  })
+                  }),
                 )
               }
             />
@@ -282,7 +282,7 @@ export function SearchResults({ category, heading }: { category?: CategoryConfig
             {draftCount.data
               ? t('search.show', { count: draftCount.data.total }).replace(
                   String(draftCount.data.total),
-                  formatNumber(draftCount.data.total, lng)
+                  formatNumber(draftCount.data.total, lng),
                 )
               : t('search.apply')}
           </Button>

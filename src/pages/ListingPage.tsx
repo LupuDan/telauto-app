@@ -46,7 +46,7 @@ export function ListingPage() {
   const data = listing.data
   usePageMeta(
     data ? `${data.title} – Telauto.md` : t('errors.listingNotFound'),
-    data ? data.description.slice(0, 160) : undefined
+    data ? data.description.slice(0, 160) : undefined,
   )
 
   // opening another listing (e.g. from "similar") starts at the top
@@ -322,8 +322,8 @@ function Compatibility({ rows }: { rows: CompatibilityRow[] }) {
         row.makeId === vehicle.makeId &&
         (row.modelId === null || row.modelId === vehicle.modelId) &&
         vehicle.year >= row.yearFrom &&
-        vehicle.year <= row.yearTo
-    )
+        vehicle.year <= row.yearTo,
+    ),
   )
 
   return (
