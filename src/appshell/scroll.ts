@@ -15,7 +15,7 @@ export function useScrollRestoration() {
   }, [])
   useLayoutEffect(() => {
     const savedPositions = positions.current
-    const target = navigation === 'POP' ? savedPositions.get(location.key) ?? 0 : 0
+    const target = navigation === 'POP' ? (savedPositions.get(location.key) ?? 0) : 0
     let restoring = true
     const restore = () => window.scrollTo({ top: target, behavior: 'instant' })
     restore()

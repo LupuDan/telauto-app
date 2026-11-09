@@ -33,8 +33,8 @@ const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, n
           window.location.reload()
         }
         throw error
-      }
-    )
+      },
+    ),
   )
 
 const accountModule = () => import('../pages/AccountPage')

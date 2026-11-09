@@ -37,7 +37,7 @@ function ScreenFrame({ outlet }: { outlet: ReactNode }) {
           if (
             previous?.owner === owner &&
             Object.keys(options).every(
-              (key) => options[key as keyof ScreenHeaderOptions] === previous.options[key as keyof ScreenHeaderOptions]
+              (key) => options[key as keyof ScreenHeaderOptions] === previous.options[key as keyof ScreenHeaderOptions],
             ) &&
             Object.keys(options).length === Object.keys(previous.options).length
           )
@@ -46,7 +46,7 @@ function ScreenFrame({ outlet }: { outlet: ReactNode }) {
         }),
       clear: (owner: symbol) => setOverride((previous) => (previous?.owner === owner ? null : previous)),
     }),
-    []
+    [],
   )
   useScrollRestoration()
   const ownBar = /^\/a\/[^/]+(?:\/edit)?\/?$/.test(location.pathname) || location.pathname === '/new'
