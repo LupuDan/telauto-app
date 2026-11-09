@@ -1062,5 +1062,33 @@
   "theme": {
     "toDark": "Mod întunecat",
     "toLight": "Mod luminos"
+  },
+  "appShell": {
+    "back": "Înapoi",
+    "offlineBanner": "Nu există conexiune la internet",
+    "offlineTitle": "Nu există conexiune",
+    "offlineText": "Verifică internetul și încearcă din nou.",
+    "retry": "Încearcă din nou",
+    "offlineAction": "Nu există conexiune, încearcă din nou.",
+    "pressAgainToExit": "Apasă încă o dată pentru a ieși",
+    "photoCamera": "Fă o poză",
+    "photoGallery": "Alege din galerie",
+    "leaveFormTitle": "Ieși din formular?",
+    "leaveFormText": "Ciorna rămâne salvată.",
+    "leave": "Ieși",
+    "stay": "Rămâi",
+    "call": "Sună",
+    "aboutApp": "Despre aplicație",
+    "themeLabel": "Tema",
+    "themeSystem": "Ca telefonul",
+    "themeLight": "Luminoasă",
+    "themeDark": "Întunecată",
+    "version": "Versiunea {{version}}",
+    "checkEmailOnPhone": "Ți-am trimis un e-mail. Deschide linkul pe acest telefon – se va deschide aplicația.",
+    "galleryCounter": "{{current}} / {{total}}",
+    "closeGallery": "Închide galeria",
+    "loadingMore": "Se încarcă…",
+    "endOfList": "Ai văzut toate anunțurile",
+    "scrollToTop": "Sus"
   }
 }

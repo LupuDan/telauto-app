@@ -1069,5 +1069,33 @@
   "theme": {
     "toDark": "Тёмная тема",
     "toLight": "Светлая тема"
+  },
+  "appShell": {
+    "back": "Назад",
+    "offlineBanner": "Нет подключения к интернету",
+    "offlineTitle": "Нет подключения",
+    "offlineText": "Проверьте интернет и попробуйте снова.",
+    "retry": "Попробовать снова",
+    "offlineAction": "Нет подключения, попробуйте снова.",
+    "pressAgainToExit": "Нажмите ещё раз, чтобы выйти",
+    "photoCamera": "Сделать фото",
+    "photoGallery": "Выбрать из галереи",
+    "leaveFormTitle": "Выйти из формы?",
+    "leaveFormText": "Черновик сохранится.",
+    "leave": "Выйти",
+    "stay": "Остаться",
+    "call": "Позвонить",
+    "aboutApp": "О приложении",
+    "themeLabel": "Тема",
+    "themeSystem": "Как на телефоне",
+    "themeLight": "Светлая",
+    "themeDark": "Тёмная",
+    "version": "Версия {{version}}",
+    "checkEmailOnPhone": "Мы отправили вам письмо. Откройте ссылку на этом телефоне — откроется приложение.",
+    "galleryCounter": "{{current}} / {{total}}",
+    "closeGallery": "Закрыть галерею",
+    "loadingMore": "Загрузка…",
+    "endOfList": "Вы просмотрели все объявления",
+    "scrollToTop": "Наверх"
   }
 }
