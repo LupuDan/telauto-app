@@ -31,7 +31,7 @@ export function Layout() {
   return (
     <div
       className={`flex min-h-dvh flex-col ${
-        showBottomNav || ownBar ? 'pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-0' : ''
+        showBottomNav || ownBar ? 'pb-[calc(4.5rem+var(--app-inset-bottom,env(safe-area-inset-bottom)))] lg:pb-0' : ''
       }`}
     >
       <a
@@ -45,11 +45,7 @@ export function Layout() {
         {t('app.skipToContent')}
       </a>
       <Header />
-      <main
-        id="main"
-        tabIndex={-1}
-        className="mx-auto w-full max-w-page flex-1 px-4 py-6 outline-none md:px-6"
-      >
+      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-page flex-1 px-4 py-6 outline-none md:px-6">
         {/* pages that are downloaded on first use (see App.tsx) show a spinner meanwhile */}
         <Suspense fallback={<LoadingState />}>
           <Outlet />

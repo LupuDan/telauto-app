@@ -48,7 +48,12 @@ export function BottomNav() {
       Icon: Search,
       active: pathname === '/search' || pathname.startsWith('/c/'),
     },
-    messages: { to: '/messages', label: t('nav.messages'), Icon: MessageCircle, active: pathname.startsWith('/messages') },
+    messages: {
+      to: '/messages',
+      label: t('nav.messages'),
+      Icon: MessageCircle,
+      active: pathname.startsWith('/messages'),
+    },
     account: {
       // without an account 'Cont' opens a short screen with the login and register buttons
       to: '/account',
@@ -62,7 +67,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label={t('nav.label')}
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] shadow-float lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface pb-[var(--app-inset-bottom,env(safe-area-inset-bottom))] shadow-float lg:hidden"
     >
       <div className="mx-auto flex max-w-xl items-stretch px-1" style={{ height: BOTTOM_NAV_HEIGHT }}>
         <NavItem {...items.home} />

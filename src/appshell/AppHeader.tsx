@@ -53,7 +53,7 @@ export function AppHeader({ route, options = {} }: { route: ScreenRoute; options
               </Button>
             )}
             <h1
-              className={`min-w-0 flex-1 truncate ${kind === 'large' && scroll <= 0 ? 'font-display text-2xl font-semibold' : 'text-lg font-semibold'} ${overlay ? 'invisible' : ''}`}
+              className={`min-w-0 flex-1 truncate ${kind === 'large' ? 'font-display text-2xl font-semibold' : 'text-lg font-semibold'} ${overlay ? 'invisible' : ''}`}
             >
               {title}
             </h1>

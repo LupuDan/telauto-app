@@ -266,7 +266,7 @@ function ListingView({
         className={
           IS_APP
             ? `${appBottomPanelClass} border-t border-line px-4 pt-3 shadow-float`
-            : 'fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-float lg:hidden'
+            : 'fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface px-4 pt-3 pb-[max(0.75rem,var(--app-inset-bottom,env(safe-area-inset-bottom)))] shadow-float lg:hidden'
         }
       >
         <div className="mx-auto max-w-xl">

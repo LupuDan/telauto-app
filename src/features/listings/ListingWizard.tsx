@@ -315,7 +315,7 @@ export function ListingWizard(props: Props) {
             className={
               IS_APP
                 ? appBottomPanelClass + ' z-30 border-t border-line bg-surface px-4 pt-1 pb-3 shadow-float'
-                : 'fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface px-4 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-float lg:static lg:mt-4 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none'
+                : 'fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface px-4 pt-1 pb-[max(0.75rem,var(--app-inset-bottom,env(safe-area-inset-bottom)))] shadow-float lg:static lg:mt-4 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none'
             }
           >
             <div className="mx-auto flex max-w-xl flex-col lg:mx-0 lg:max-w-none lg:flex-row lg:items-center lg:justify-between">

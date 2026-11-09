@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type FormEvent,
   type KeyboardEvent,
   type ReactNode,
@@ -52,23 +53,22 @@ export function ConversationPage() {
   useLiveConversation(conversation.data ? validId : undefined)
 
   const keyboardHeight = useKeyboardHeight()
-  const chatRef = useRef<HTMLDivElement>(null)
+  // App: the chat is a fixed layer between the screen header and the keyboard (or the bottom of the screen).
+  // Android may or may not shrink the page when the keyboard opens; only the part of the keyboard
+  // that still covers the page is added at the bottom, so the input never jumps to the middle.
   const fullHeight = useRef(window.innerHeight)
-  const [chatHeight, setChatHeight] = useState<number>()
+  const [chatBox, setChatBox] = useState<{ top: number; bottom: number }>()
   useLayoutEffect(() => {
     if (!IS_APP) return
     const update = () => {
       if (!keyboardHeight) fullHeight.current = window.innerHeight
-      const available = Math.min(window.innerHeight, fullHeight.current - keyboardHeight)
-      setChatHeight(Math.max(0, available - (chatRef.current?.getBoundingClientRect().top ?? 0)))
+      const shrunkBy = Math.max(0, fullHeight.current - window.innerHeight)
+      const header = document.querySelector('.app-shell-header')?.getBoundingClientRect().bottom ?? 0
+      setChatBox({ top: Math.max(0, Math.round(header)), bottom: Math.max(0, keyboardHeight - shrunkBy) })
     }
     update()
     window.addEventListener('resize', update)
-    window.visualViewport?.addEventListener('resize', update)
-    return () => {
-      window.removeEventListener('resize', update)
-      window.visualViewport?.removeEventListener('resize', update)
-    }
+    return () => window.removeEventListener('resize', update)
   }, [keyboardHeight, conversation.data])
   const { i18n } = useTranslation()
   const headerTitle = useMemo(() => {
@@ -167,13 +167,21 @@ export function ConversationPage() {
         computers: the right column of the messages frame, the list stays on the left
       */}
       <div
-        ref={chatRef}
         className={
           IS_APP
-            ? 'flex min-h-0 flex-col overflow-hidden bg-surface'
+            ? 'fixed inset-x-0 z-20 mx-auto flex max-w-[840px] flex-col overflow-hidden bg-surface'
             : 'fixed inset-0 z-40 flex flex-col bg-surface lg:static lg:z-auto lg:h-full'
         }
-        style={IS_APP ? { height: chatHeight ?? 'calc(100dvh - var(--app-inset-top) - 4rem)' } : undefined}
+        style={
+          IS_APP
+            ? ({
+                top: chatBox?.top ?? 0,
+                bottom: chatBox?.bottom ?? 0,
+                // with the keyboard open the gesture bar is hidden: no extra room under the input
+                ...(keyboardHeight ? { '--app-inset-bottom': '0px' } : {}),
+              } as CSSProperties)
+            : undefined
+        }
       >
         {chat}
       </div>
@@ -207,7 +215,7 @@ function ChatHeader({ conversation: c }: { conversation: ConversationSummary }) 
   )
 
   return (
-    <div className="shrink-0 border-b border-line bg-surface px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 lg:px-4">
+    <div className="shrink-0 border-b border-line bg-surface px-2 pt-[max(0.5rem,var(--app-inset-top,env(safe-area-inset-top)))] pb-2 lg:px-4">
       <div className="flex items-center gap-1">
         <Link
           to="/messages"
@@ -358,7 +366,7 @@ function Composer({ conversation }: { conversation: ConversationSummary }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="shrink-0 space-y-2 border-t border-line bg-surface px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:px-4"
+      className="shrink-0 space-y-2 border-t border-line bg-surface px-3 pt-2 pb-[max(0.5rem,var(--app-inset-bottom,env(safe-area-inset-bottom)))] lg:px-4"
     >
       {send.isError && <Alert kind="error">{translateKey(t, errorToKey(send.error))}</Alert>}
       <div className="flex items-end gap-2">
@@ -405,7 +413,7 @@ function BackOnly({ children }: { children: ReactNode }) {
         className={
           IS_APP
             ? 'hidden'
-            : 'shrink-0 border-b border-line px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 lg:hidden'
+            : 'shrink-0 border-b border-line px-2 pt-[max(0.5rem,var(--app-inset-top,env(safe-area-inset-top)))] pb-2 lg:hidden'
         }
       >
         <Link

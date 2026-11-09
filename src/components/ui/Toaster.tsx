@@ -23,7 +23,7 @@ export function Toaster() {
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-50 flex flex-col items-center gap-2 lg:inset-x-auto lg:top-20 lg:right-6 lg:bottom-auto lg:items-end"
+      className="pointer-events-none fixed inset-x-4 bottom-[calc(5rem+var(--app-inset-bottom,env(safe-area-inset-bottom)))] z-50 flex flex-col items-center gap-2 lg:inset-x-auto lg:top-20 lg:right-6 lg:bottom-auto lg:items-end"
     >
       {messages.map((message) => (
         <div

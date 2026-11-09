@@ -79,7 +79,13 @@ export function ListingGallery({
         <div className="flex aspect-[4/3] items-center justify-center text-muted">
           <CategoryIcon name={fallbackIcon} className="size-16" />
         </div>
-        {actions && <div className="absolute top-2 right-2 flex gap-1">{actions}</div>}
+        {actions && (
+          <div
+            className={`absolute right-2 flex gap-1 ${IS_APP ? 'top-[calc(var(--app-inset-top,0px)+0.5rem)]' : 'top-2'}`}
+          >
+            {actions}
+          </div>
+        )}
       </div>
     )
   }
@@ -120,7 +126,13 @@ export function ListingGallery({
           ))}
         </div>
 
-        {actions && <div className="absolute top-2 right-2 flex gap-1">{actions}</div>}
+        {actions && (
+          <div
+            className={`absolute right-2 flex gap-1 ${IS_APP ? 'top-[calc(var(--app-inset-top,0px)+0.5rem)]' : 'top-2'}`}
+          >
+            {actions}
+          </div>
+        )}
 
         <button
           type="button"
@@ -261,7 +273,7 @@ export function ListingGallery({
           <button
             type="button"
             onClick={() => dialogRef.current?.close()}
-            className="absolute top-3 right-3 flex size-11 items-center justify-center rounded-full bg-white/15 hover:bg-white/25"
+            className="absolute top-[calc(var(--app-inset-top,0px)+0.75rem)] right-3 flex size-11 items-center justify-center rounded-full bg-white/15 hover:bg-white/25"
             aria-label={t(IS_APP ? 'appShell.closeGallery' : 'listing.closePhoto')}
           >
             <X aria-hidden="true" className="size-6" strokeWidth={1.75} />

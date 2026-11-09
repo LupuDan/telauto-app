@@ -37,7 +37,7 @@ export function CookieBanner({ aboveBottomNav = false }: { aboveBottomNav?: bool
       role="region"
       aria-label={t('cookies.more')}
       className={`fixed inset-x-0 z-40 border-t border-line bg-surface p-3 shadow-float sm:p-4 lg:bottom-0 ${
-        aboveBottomNav ? 'bottom-[calc(4rem+env(safe-area-inset-bottom))]' : 'bottom-0'
+        aboveBottomNav ? 'bottom-[calc(4rem+var(--app-inset-bottom,env(safe-area-inset-bottom)))]' : 'bottom-0'
       }`}
     >
       <div className="mx-auto flex max-w-page flex-col gap-3 text-sm text-ink sm:flex-row sm:items-center">

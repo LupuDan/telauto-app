@@ -1,4 +1,4 @@
-import { useBackHandler } from '../../native'
+import { IS_APP, useBackHandler } from '../../native'
 import { X } from 'lucide-react'
 import { useEffect, useRef, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -73,7 +73,9 @@ export function Sheet({
         }
       }}
       className={`m-0 mt-auto w-full max-w-none overflow-hidden bg-surface p-0 text-ink shadow-float backdrop:bg-black/50 open:flex open:flex-col open:animate-[sheet-up_200ms_ease-out] sm:m-auto sm:w-[min(32rem,calc(100%-2rem))] sm:rounded-panel sm:open:animate-none ${
-        full ? 'h-dvh max-h-none sm:h-[min(48rem,calc(100dvh-4rem))]' : 'max-h-[90dvh] rounded-t-panel'
+        full
+          ? `h-dvh max-h-none sm:h-[min(48rem,calc(100dvh-4rem))] ${IS_APP ? 'pt-[var(--app-inset-top,0px)]' : ''}`
+          : 'max-h-[90dvh] rounded-t-panel'
       }`}
     >
       <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-4 py-2">
@@ -89,7 +91,7 @@ export function Sheet({
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">{children}</div>
       {footer && (
-        <div className="shrink-0 border-t border-line bg-surface px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="shrink-0 border-t border-line bg-surface px-4 pt-3 pb-[max(0.75rem,var(--app-inset-bottom,env(safe-area-inset-bottom)))]">
           {footer}
         </div>
       )}

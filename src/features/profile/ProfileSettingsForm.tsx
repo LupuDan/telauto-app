@@ -96,7 +96,7 @@ export function ProfileSettingsForm({ userId, profile, phone }: Props) {
         fixed at the bottom of the screen (above the bottom bar on phones);
         active only after a change (plan de design, 6.6)
       */}
-      <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] -mx-4 border-t border-line bg-surface px-4 py-3 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:pt-2 lg:pb-0">
+      <div className="sticky bottom-[calc(4.5rem+var(--app-inset-bottom,env(safe-area-inset-bottom)))] -mx-4 border-t border-line bg-surface px-4 py-3 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:pt-2 lg:pb-0">
         <Button type="submit" fullWidth loading={isSubmitting} disabled={!isDirty} className="lg:w-auto lg:min-w-48">
           {t('account.save')}
         </Button>
