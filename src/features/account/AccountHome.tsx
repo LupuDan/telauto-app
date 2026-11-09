@@ -1,3 +1,5 @@
+import { useScreenHeader } from '../../appshell'
+import { AboutApp } from './AboutApp'
 import { Car, Heart, LifeBuoy, LogOut, Settings, ShieldCheck, Tag } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useNavigate } from 'react-router'
@@ -23,18 +25,24 @@ import { HAS_GARAGE, useAccountSummary } from './useAccountSummary'
  */
 export function AccountHome() {
   const { t } = useTranslation()
+  useScreenHeader(IS_APP ? { title: t('nav.account') } : {})
   const { user } = useAuth()
   const profile = useProfile(user?.id)
 
   return (
     <div className="mx-auto max-w-xl space-y-4">
-      <h1 className="type-h1 text-ink">{t('account.title')}</h1>
+      <h1 className={IS_APP ? 'sr-only' : 'type-h1 text-ink'}>{t('account.title')}</h1>
       {profile.data?.is_blocked && <Alert kind="warning">{t('account.blockedNotice')}</Alert>}
       <ProfileHeader />
       <QuickStats />
       <SectionsMenu />
-      <LanguageRow />
+      {!IS_APP && <LanguageRow />}
       <LogoutButton />
+      {IS_APP && (
+        <AboutApp>
+          <LanguageRow />
+        </AboutApp>
+      )}
     </div>
   )
 }
@@ -70,7 +78,10 @@ function ProfileHeader() {
         {/* user text: React shows it as plain text */}
         <p className="truncate font-semibold text-ink">{profile.data ? name : '…'}</p>
         {locality && <p className="truncate text-sm text-muted">{localizedName(locality, i18n.resolvedLanguage)}</p>}
-        <Link to={`/u/${user.id}`} className="inline-flex min-h-8 items-center text-sm font-medium text-brand hover:underline">
+        <Link
+          to={`/u/${user.id}`}
+          className="inline-flex min-h-8 items-center text-sm font-medium text-brand hover:underline"
+        >
           {t('account.publicProfileLink')}
         </Link>
       </div>
@@ -103,7 +114,9 @@ function QuickStats() {
                   highlighted ? 'border-tag-600 bg-tag-50' : 'border-line bg-surface hover:bg-paper'
                 }`}
               >
-                <span className={`type-price tabular ${tile.value ? 'text-ink' : 'text-muted'}`}>{tile.value ?? '–'}</span>
+                <span className={`type-price tabular ${tile.value ? 'text-ink' : 'text-muted'}`}>
+                  {tile.value ?? '–'}
+                </span>
                 <span className="max-w-full truncate text-sm text-muted">{tile.label}</span>
               </Link>
             </li>
@@ -157,7 +170,9 @@ function SectionsMenu() {
         label={t('account.settings.title')}
         active={isActive('/account/settings')}
       />
-      {!IS_APP && profile.data?.role === 'admin' && <MenuRow to="/admin" Icon={ShieldCheck} label={t('admin.openPanel')} />}
+      {!IS_APP && profile.data?.role === 'admin' && (
+        <MenuRow to="/admin" Icon={ShieldCheck} label={t('admin.openPanel')} />
+      )}
       <MenuRow to="/p/help" Icon={LifeBuoy} label={t('account.help')} />
     </MenuList>
   )
@@ -197,12 +212,13 @@ function LogoutButton() {
 /** "Cont" without an account: the tag logo, one sentence, two buttons, then language and help. */
 export function GuestAccount() {
   const { t } = useTranslation()
+  useScreenHeader(IS_APP ? { title: t('nav.account') } : {})
   const next = encodeURIComponent('/account')
   return (
     <div className="mx-auto max-w-md space-y-6">
       <div className="flex flex-col items-center px-4 pt-6 text-center">
         <Logo variant="icon" className="size-14" />
-        <h1 className="mt-4 type-h1 text-ink">{t('account.title')}</h1>
+        <h1 className={IS_APP ? 'sr-only' : 'mt-4 type-h1 text-ink'}>{t('account.title')}</h1>
         <p className="mt-2 text-muted">{t('account.guestText')}</p>
         <div className="mt-6 grid w-full gap-2">
           <Link to={`/login?next=${next}`} className={buttonClass('primary', 'normal', true)}>
@@ -213,10 +229,18 @@ export function GuestAccount() {
           </Link>
         </div>
       </div>
-      <LanguageRow />
-      <MenuList>
-        <MenuRow to="/p/help" Icon={LifeBuoy} label={t('account.help')} />
-      </MenuList>
+      {IS_APP ? (
+        <AboutApp>
+          <LanguageRow />
+        </AboutApp>
+      ) : (
+        <LanguageRow />
+      )}
+      {!IS_APP && (
+        <MenuList>
+          <MenuRow to="/p/help" Icon={LifeBuoy} label={t('account.help')} />
+        </MenuList>
+      )}
     </div>
   )
 }

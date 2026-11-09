@@ -1,5 +1,16 @@
+import { useScreenHeader } from '../appshell'
+import { haptic, IS_APP, useKeyboardHeight } from '../native'
 import { Check, CheckCheck, ChevronLeft, SendHorizontal } from 'lucide-react'
-import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams } from 'react-router'
 import { usePageMeta } from '../app/usePageMeta'
@@ -40,11 +51,58 @@ export function ConversationPage() {
   const messages = useMessages(conversation.data ? validId : undefined)
   useLiveConversation(conversation.data ? validId : undefined)
 
+  const keyboardHeight = useKeyboardHeight()
+  const chatRef = useRef<HTMLDivElement>(null)
+  const fullHeight = useRef(window.innerHeight)
+  const [chatHeight, setChatHeight] = useState<number>()
+  useLayoutEffect(() => {
+    if (!IS_APP) return
+    const update = () => {
+      if (!keyboardHeight) fullHeight.current = window.innerHeight
+      const available = Math.min(window.innerHeight, fullHeight.current - keyboardHeight)
+      setChatHeight(Math.max(0, available - (chatRef.current?.getBoundingClientRect().top ?? 0)))
+    }
+    update()
+    window.addEventListener('resize', update)
+    window.visualViewport?.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('resize', update)
+      window.visualViewport?.removeEventListener('resize', update)
+    }
+  }, [keyboardHeight, conversation.data])
+  const { i18n } = useTranslation()
+  const headerTitle = useMemo(() => {
+    const c = conversation.data
+    if (!c) return t('messages.title')
+    const content = (
+      <>
+        <span className="size-11 shrink-0 overflow-hidden rounded-field bg-paper">
+          {c.listingCover && <img src={publicPhotoUrl(c.listingCover)} alt="" className="size-full object-cover" />}
+        </span>
+        <span className="min-w-0">
+          <span className="block truncate text-sm text-ink">{c.listingTitle ?? t('messages.listingDeleted')}</span>
+          <span className="block text-sm text-muted tabular">
+            {c.listingPrice !== null && c.listingCurrency
+              ? formatPrice(c.listingPrice, c.listingCurrency, i18n.resolvedLanguage)
+              : ''}
+          </span>
+        </span>
+      </>
+    )
+    return c.listingId ? (
+      <Link to={'/a/' + c.listingId} className="flex min-w-0 items-center gap-2">
+        {content}
+      </Link>
+    ) : (
+      <span className="flex min-w-0 items-center gap-2">{content}</span>
+    )
+  }, [conversation.data, t, i18n.resolvedLanguage])
+  useScreenHeader(IS_APP ? { title: headerTitle, header: 'inner' } : {})
   const name = conversation.data?.otherName || t('profile.unnamed')
   usePageMeta(conversation.data ? `${name} – ${t('messages.metaTitle')}` : t('messages.metaTitle'))
 
   // phones: the page behind the full-screen chat must not scroll
-  const isDesktop = useIsDesktop()
+  const isDesktop = useIsDesktop() && !IS_APP
   useEffect(() => {
     if (isDesktop) return
     const html = document.documentElement
@@ -85,7 +143,7 @@ export function ConversationPage() {
   } else {
     chat = (
       <>
-        <ChatHeader conversation={conversation.data} />
+        {!IS_APP && <ChatHeader conversation={conversation.data} />}
         {messages.isPending ? (
           <div className="flex-1">
             <LoadingState />
@@ -95,7 +153,7 @@ export function ConversationPage() {
             <ErrorState error={messages.error} onRetry={() => void messages.refetch()} />
           </div>
         ) : (
-          <MessageList messages={messages.data} />
+          <MessageList messages={messages.data} keyboardHeight={IS_APP ? keyboardHeight : 0} />
         )}
         <Composer conversation={conversation.data} />
       </>
@@ -108,7 +166,17 @@ export function ConversationPage() {
         phones: the chat covers the whole screen (also the site header), with "‹" back to the list;
         computers: the right column of the messages frame, the list stays on the left
       */}
-      <div className="fixed inset-0 z-40 flex flex-col bg-surface lg:static lg:z-auto lg:h-full">{chat}</div>
+      <div
+        ref={chatRef}
+        className={
+          IS_APP
+            ? 'flex min-h-0 flex-col overflow-hidden bg-surface'
+            : 'fixed inset-0 z-40 flex flex-col bg-surface lg:static lg:z-auto lg:h-full'
+        }
+        style={IS_APP ? { height: chatHeight ?? 'calc(100dvh - var(--app-inset-top) - 4rem)' } : undefined}
+      >
+        {chat}
+      </div>
     </MessagesLayout>
   )
 }
@@ -172,7 +240,7 @@ function ChatHeader({ conversation: c }: { conversation: ConversationSummary }) 
   )
 }
 
-function MessageList({ messages }: { messages: Message[] }) {
+function MessageList({ messages, keyboardHeight }: { messages: Message[]; keyboardHeight: number }) {
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -185,7 +253,7 @@ function MessageList({ messages }: { messages: Message[] }) {
   // always show the newest message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: 'end' })
-  }, [messages.length])
+  }, [messages.length, keyboardHeight])
 
   if (messages.length === 0) {
     return (
@@ -267,6 +335,7 @@ function Composer({ conversation }: { conversation: ConversationSummary }) {
     if (!body || send.isPending) return
     send.mutate(body, {
       onSuccess: () => {
+        if (IS_APP) haptic('success')
         setText('')
         textareaRef.current?.focus()
       },
@@ -332,7 +401,13 @@ function BackOnly({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
   return (
     <>
-      <div className="shrink-0 border-b border-line px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 lg:hidden">
+      <div
+        className={
+          IS_APP
+            ? 'hidden'
+            : 'shrink-0 border-b border-line px-2 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 lg:hidden'
+        }
+      >
         <Link
           to="/messages"
           className="flex size-11 items-center justify-center rounded-field text-ink hover:bg-paper"

@@ -1,5 +1,7 @@
+import { IS_APP } from '../../native'
+import { AppPhotoMenu } from './AppPhotoMenu'
 import { Camera } from 'lucide-react'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert } from '../../components/ui/Alert'
 import { Avatar } from '../../components/ui/Avatar'
@@ -16,6 +18,8 @@ import { useUpdateMyAvatar } from './hooks'
 export function AvatarField({ userId, profile }: { userId: string; profile: PublicProfile }) {
   const { t } = useTranslation()
   const input = useRef<HTMLInputElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
+  const [photoMenu, setPhotoMenu] = useState(false)
   const update = useUpdateMyAvatar(userId)
   const name = profile.display_name || t('profile.unnamed')
 
@@ -30,7 +34,7 @@ export function AvatarField({ userId, profile }: { userId: string; profile: Publ
             size="compact"
             loading={update.isPending && update.variables?.file !== null}
             disabled={update.isPending}
-            onClick={() => input.current?.click()}
+            onClick={() => (IS_APP ? setPhotoMenu(true) : input.current?.click())}
           >
             <Camera aria-hidden="true" className="size-5" strokeWidth={1.75} />
             {profile.avatar_path ? t('account.photoChange') : t('account.photoAdd')}
@@ -48,6 +52,28 @@ export function AvatarField({ userId, profile }: { userId: string; profile: Publ
           )}
         </div>
       </div>
+      {IS_APP && (
+        <>
+          <AppPhotoMenu
+            open={photoMenu}
+            onClose={() => setPhotoMenu(false)}
+            onChoose={(camera) => (camera ? cameraRef : input).current?.click()}
+            title={t('account.photo')}
+          />
+          <input
+            ref={cameraRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              event.target.value = ''
+              if (file) update.mutate({ file, oldPath: profile.avatar_path })
+            }}
+          />
+        </>
+      )}
       <input
         ref={input}
         type="file"

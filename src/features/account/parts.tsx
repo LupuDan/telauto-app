@@ -1,7 +1,9 @@
+import { useScreenHeader } from '../../appshell'
+import { IS_APP } from '../../native'
 import { ChevronLeft, ChevronRight, type LucideIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useCallback, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 
 /**
  * Row of the account lists (plan de design, 6.6): 56 px high, icon on the left, name,
@@ -30,7 +32,11 @@ export function MenuRow({
         to={to}
         aria-current={active ? 'page' : undefined}
         className={`flex min-h-14 items-center gap-3 px-4 py-2 ${
-          active ? 'bg-brand-50 font-semibold text-brand' : danger ? 'text-danger hover:bg-paper' : 'text-ink hover:bg-paper'
+          active
+            ? 'bg-brand-50 font-semibold text-brand'
+            : danger
+              ? 'text-danger hover:bg-paper'
+              : 'text-ink hover:bg-paper'
         }`}
       >
         <Icon
@@ -70,6 +76,12 @@ export function ScreenHeader({
   children?: ReactNode
 }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const onBack = useCallback(() => {
+    void navigate(back)
+  }, [navigate, back])
+  useScreenHeader(IS_APP ? { title, header: 'inner', onBack } : {})
+  if (IS_APP) return children ? <div className="mb-4">{children}</div> : null
   return (
     <div className="mb-4 flex min-h-11 items-center gap-1">
       <Link

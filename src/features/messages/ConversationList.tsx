@@ -1,3 +1,6 @@
+import { IS_APP } from '../../native'
+import { usePullToRefresh } from '../../lib/usePullToRefresh'
+import { SkeletonRows } from '../../appshell'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { buttonClass } from '../../components/ui/buttonStyles'
@@ -13,10 +16,38 @@ import { useConversations, type ConversationSummary } from './api'
  * activeId: the conversation open next to the list (computers).
  */
 export function ConversationList({ activeId }: { activeId?: string }) {
-  const { t } = useTranslation()
   const conversations = useConversations()
+  if (IS_APP && !activeId) return <RefreshableConversations conversations={conversations} />
+  return <ConversationItems conversations={conversations} activeId={activeId} />
+}
+function RefreshableConversations({ conversations }: { conversations: ReturnType<typeof useConversations> }) {
+  const { t } = useTranslation()
+  const { pull, refreshing } = usePullToRefresh(() => conversations.refetch())
+  return (
+    <>
+      {(pull > 0 || refreshing) && (
+        <div
+          role="status"
+          className="flex justify-center py-2 text-sm text-muted"
+          style={{ minHeight: refreshing ? 40 : pull / 2 }}
+        >
+          {t('myListings.refreshing')}
+        </div>
+      )}
+      <ConversationItems conversations={conversations} />
+    </>
+  )
+}
+function ConversationItems({
+  conversations,
+  activeId,
+}: {
+  conversations: ReturnType<typeof useConversations>
+  activeId?: string
+}) {
+  const { t } = useTranslation()
 
-  if (conversations.isPending) return <ConversationListSkeleton />
+  if (conversations.isPending) return IS_APP ? <SkeletonRows /> : <ConversationListSkeleton />
   if (conversations.isError) {
     return <ErrorState error={conversations.error} onRetry={() => void conversations.refetch()} />
   }

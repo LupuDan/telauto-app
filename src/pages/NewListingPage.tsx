@@ -1,3 +1,4 @@
+import { IS_APP } from '../native'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { usePageMeta } from '../app/usePageMeta'
@@ -14,7 +15,7 @@ export function NewListingPage() {
 
   return (
     <div>
-      <h1 className="mx-auto mb-4 max-w-3xl type-h1 text-ink">{t('listingForm.newTitle')}</h1>
+      <h1 className={IS_APP ? 'sr-only' : 'mx-auto mb-4 max-w-3xl type-h1 text-ink'}>{t('listingForm.newTitle')}</h1>
       {draft && draft.categorySlug && (
         <div className="mx-auto mb-4 max-w-3xl">
           <Alert kind="info">{t('listingForm.draftRestored')}</Alert>

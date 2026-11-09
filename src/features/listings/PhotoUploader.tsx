@@ -1,3 +1,5 @@
+import { IS_APP } from '../../native'
+import { AppPhotoMenu } from '../profile/AppPhotoMenu'
 import {
   closestCenter,
   DndContext,
@@ -41,6 +43,8 @@ type Props = {
 export function PhotoUploader({ photos, onChange, minPhotos, needs, error }: Props) {
   const { t } = useTranslation()
   const inputRef = useRef<HTMLInputElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
+  const [photoMenu, setPhotoMenu] = useState(false)
   const [processing, setProcessing] = useState(0)
   const [failed, setFailed] = useState(0)
 
@@ -100,9 +104,7 @@ export function PhotoUploader({ photos, onChange, minPhotos, needs, error }: Pro
     <div className="space-y-3">
       <div>
         <p className="font-medium text-ink">{needs}</p>
-        <p className="mt-0.5 text-sm text-muted">
-          {t('listingForm.photosHint', { min: minPhotos, max: MAX_PHOTOS })}
-        </p>
+        <p className="mt-0.5 text-sm text-muted">{t('listingForm.photosHint', { min: minPhotos, max: MAX_PHOTOS })}</p>
       </div>
 
       {error && <Alert kind="error">{error}</Alert>}
@@ -134,7 +136,7 @@ export function PhotoUploader({ photos, onChange, minPhotos, needs, error }: Pro
               <li className={photos.length === 0 && processing === 0 ? 'col-span-full' : undefined}>
                 <button
                   type="button"
-                  onClick={() => inputRef.current?.click()}
+                  onClick={() => (IS_APP ? setPhotoMenu(true) : inputRef.current?.click())}
                   className={`flex w-full flex-col items-center justify-center gap-1.5 rounded-card border-2 border-dashed bg-paper px-3 text-center hover:border-brand hover:bg-brand-50 ${
                     error ? 'border-danger' : 'border-line-strong'
                   } ${photos.length === 0 && processing === 0 ? 'min-h-48 py-8' : 'aspect-[4/3]'}`}
@@ -154,10 +156,21 @@ export function PhotoUploader({ photos, onChange, minPhotos, needs, error }: Pro
         </SortableContext>
       </DndContext>
 
+      {IS_APP && (
+        <>
+          <AppPhotoMenu
+            open={photoMenu}
+            onClose={() => setPhotoMenu(false)}
+            onChoose={(camera) => (camera ? cameraRef : inputRef).current?.click()}
+            title={t('listingForm.stepNames.photos')}
+          />
+          <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={handleFiles} />
+        </>
+      )}
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+        accept={IS_APP ? 'image/*' : 'image/jpeg,image/png,image/webp,image/heic,image/heif'}
         multiple
         hidden
         onChange={handleFiles}
