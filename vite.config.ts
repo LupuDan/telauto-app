@@ -70,7 +70,11 @@ export default defineConfig(({ command, mode }) => {
       ? {
           define: { 'import.meta.env.VITE_APP_BUILD_VERSION': JSON.stringify(new Date().toISOString()) },
           resolve: {
-            alias: { './EntryPages': fileURLToPath(new URL('./src/app/AppEntryPages.tsx', import.meta.url)) },
+            // app versions of two modules (src/app): entry pages and the React Query provider
+            alias: {
+              './EntryPages': fileURLToPath(new URL('./src/app/AppEntryPages.tsx', import.meta.url)),
+              './QueryProviderEntry': fileURLToPath(new URL('./src/app/AppQueryProviderEntry.ts', import.meta.url)),
+            },
           },
         }
       : {}),

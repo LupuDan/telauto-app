@@ -1,10 +1,11 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { lazy, Suspense, type ComponentType } from 'react'
+import { QueryClient } from '@tanstack/react-query'
+import { lazy, type ComponentType } from 'react'
 import { HashRouter, Route, Routes } from 'react-router'
 import { AuthProvider } from '../features/auth/AuthProvider'
 import { RequireAuth } from '../features/auth/RequireAuth'
 import { IS_APP } from '../native/platform'
 import { CategoryPage, HomePage, ListingPage, SearchPage } from './EntryPages'
+import { QueryProvider } from './QueryProviderEntry'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { HAS_GARAGE } from '../lib/categories'
 import { Layout } from './Layout'
@@ -35,9 +36,6 @@ const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, n
   )
 
 const accountModule = () => import('../pages/AccountPage')
-const QueryProvider = IS_APP
-  ? lazy(() => import('./AppQueryProvider').then((module) => ({ default: module.AppQueryProvider })))
-  : QueryClientProvider
 const AccountPage = page(accountModule, 'AccountPage')
 const AccountIndex = page(accountModule, 'AccountIndex')
 const ListingsScreen = page(accountModule, 'ListingsScreen')
@@ -74,55 +72,53 @@ const queryClient = new QueryClient({
 
 export function App() {
   return (
-    <Suspense fallback={null}>
-      <QueryProvider client={queryClient}>
-        <AuthProvider>
-          {/* HashRouter (#/...) because GitHub Pages cannot serve SPA routes on reload. */}
-          <HashRouter>
-            <Routes>
-              {/* the Android app has its own shell (headers per screen, bottom bar on main screens): PLAN_DESIGN_APP.md */}
-              <Route element={IS_APP ? <AppLayout /> : <Layout />}>
-                <Route index element={<HomePage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                <Route path="/reset" element={<ResetPage />} />
-                <Route path="/auth/confirm" element={<AuthConfirmPage />} />
-                <Route path="/u/:id" element={<PublicProfilePage />} />
-                <Route path="/c/:slug" element={<CategoryPage />} />
-                <Route path="/search" element={<SearchPage />} />
-                <Route path="/a/:id" element={<ListingPage />} />
-                <Route path="/p/:page" element={<StaticPage />} />
-                {StyleguidePage && <Route path="/styleguide" element={<StyleguidePage />} />}
+    <QueryProvider client={queryClient}>
+      <AuthProvider>
+        {/* HashRouter (#/...) because GitHub Pages cannot serve SPA routes on reload. */}
+        <HashRouter>
+          <Routes>
+            {/* the Android app has its own shell (headers per screen, bottom bar on main screens): PLAN_DESIGN_APP.md */}
+            <Route element={IS_APP ? <AppLayout /> : <Layout />}>
+              <Route index element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/reset" element={<ResetPage />} />
+              <Route path="/auth/confirm" element={<AuthConfirmPage />} />
+              <Route path="/u/:id" element={<PublicProfilePage />} />
+              <Route path="/c/:slug" element={<CategoryPage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/a/:id" element={<ListingPage />} />
+              <Route path="/p/:page" element={<StaticPage />} />
+              {StyleguidePage && <Route path="/styleguide" element={<StyleguidePage />} />}
 
-                {/* "Contul meu": the main screen also works without an account (login / register) */}
-                <Route path="/account" element={<AccountPage />}>
-                  <Route index element={<AccountIndex />} />
-                  <Route element={<RequireAuth />}>
-                    <Route path="listings" element={<ListingsScreen />} />
-                    <Route path="favorites" element={<FavoritesScreen />} />
-                    {HAS_GARAGE && <Route path="garage" element={<GarageScreen />} />}
-                    <Route path="settings" element={<SettingsMenu />} />
-                    <Route path="settings/profile" element={<ProfileScreen />} />
-                    <Route path="settings/security" element={<SecurityScreen />} />
-                    <Route path="settings/delete" element={<DeleteAccountScreen />} />
-                  </Route>
-                </Route>
-
+              {/* "Contul meu": the main screen also works without an account (login / register) */}
+              <Route path="/account" element={<AccountPage />}>
+                <Route index element={<AccountIndex />} />
                 <Route element={<RequireAuth />}>
-                  <Route path="/new" element={<NewListingPage />} />
-                  <Route path="/a/:id/edit" element={<EditListingPage />} />
-                  <Route path="/messages" element={<MessagesPage />} />
-                  <Route path="/messages/:id" element={<ConversationPage />} />
-                  {/* The admin panel stays on the website only. */}
-                  {!IS_APP && <Route path="/admin" element={<AdminPage />} />}
+                  <Route path="listings" element={<ListingsScreen />} />
+                  <Route path="favorites" element={<FavoritesScreen />} />
+                  {HAS_GARAGE && <Route path="garage" element={<GarageScreen />} />}
+                  <Route path="settings" element={<SettingsMenu />} />
+                  <Route path="settings/profile" element={<ProfileScreen />} />
+                  <Route path="settings/security" element={<SecurityScreen />} />
+                  <Route path="settings/delete" element={<DeleteAccountScreen />} />
                 </Route>
-
-                <Route path="*" element={<NotFoundPage />} />
               </Route>
-            </Routes>
-          </HashRouter>
-        </AuthProvider>
-      </QueryProvider>
-    </Suspense>
+
+              <Route element={<RequireAuth />}>
+                <Route path="/new" element={<NewListingPage />} />
+                <Route path="/a/:id/edit" element={<EditListingPage />} />
+                <Route path="/messages" element={<MessagesPage />} />
+                <Route path="/messages/:id" element={<ConversationPage />} />
+                {/* The admin panel stays on the website only. */}
+                {!IS_APP && <Route path="/admin" element={<AdminPage />} />}
+              </Route>
+
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+          </Routes>
+        </HashRouter>
+      </AuthProvider>
+    </QueryProvider>
   )
 }
