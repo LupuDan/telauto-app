@@ -15,7 +15,6 @@ import { BottomNav } from '../components/BottomNav'
 import { Toaster } from '../components/ui/Toaster'
 import { useLiveUnreadCounter } from '../features/messages/api'
 import { AppHeader } from './AppHeader'
-import { OfflineBanner } from './Offline'
 import { ScreenHeaderContext, type ScreenHeaderOptions } from './ScreenHeader'
 import { SkeletonRows } from './Skeleton'
 import { resolveScreenRoute } from './routes'
@@ -74,9 +73,6 @@ function ScreenFrame({ outlet }: { outlet: ReactNode }) {
           {t('app.skipToContent')}
         </a>
         <AppHeader route={route} options={override?.options} />
-        <div className="app-shell-width">
-          <OfflineBanner />
-        </div>
         <main id="main" tabIndex={-1} className="app-shell-width min-w-0 px-4 py-4 outline-none">
           <Suspense fallback={<SkeletonRows />}>{outlet}</Suspense>
         </main>

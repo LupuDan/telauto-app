@@ -58,6 +58,8 @@ export function ConversationPage() {
   // arrives); then nothing is added. Only if the page did not shrink is the keyboard height added at the bottom.
   const tallest = useRef({ width: window.innerWidth, height: window.innerHeight })
   const [chatBox, setChatBox] = useState<{ top: number; bottom: number }>()
+  const chatRef = useRef<HTMLDivElement>(null)
+  const lastHeight = useRef(window.innerHeight)
   useLayoutEffect(() => {
     if (!IS_APP) return
     const update = () => {
@@ -67,10 +69,28 @@ export function ConversationPage() {
       const pageShrank = tallest.current.height - window.innerHeight > 80
       const header = document.querySelector('.app-shell-header')?.getBoundingClientRect().bottom ?? 0
       setChatBox({ top: Math.max(0, Math.round(header)), bottom: pageShrank ? 0 : keyboardHeight })
+      // The phone resizes the page at once while the keyboard slides in (about a quarter of a second):
+      // start the chat where it was and let it glide to its new place together with the keyboard.
+      const moved = lastHeight.current - window.innerHeight
+      lastHeight.current = window.innerHeight
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      if (Math.abs(moved) > 80 && !reduceMotion) {
+        chatRef.current?.animate([{ transform: `translateY(${moved}px)` }, { transform: 'translateY(0)' }], {
+          duration: 260,
+          easing: 'cubic-bezier(0.2, 0, 0, 1)',
+        })
+      }
     }
     update()
     window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
+    // the header can grow (e.g. the "no internet" band): keep the chat right under it
+    const headerElement = document.querySelector('.app-shell-header')
+    const observer = headerElement ? new ResizeObserver(update) : null
+    if (headerElement) observer?.observe(headerElement)
+    return () => {
+      window.removeEventListener('resize', update)
+      observer?.disconnect()
+    }
   }, [keyboardHeight, conversation.data])
   const { i18n } = useTranslation()
   const headerTitle = useMemo(() => {
@@ -169,6 +189,7 @@ export function ConversationPage() {
         computers: the right column of the messages frame, the list stays on the left
       */}
       <div
+        ref={chatRef}
         className={
           IS_APP
             ? 'fixed inset-x-0 z-20 mx-auto flex max-w-[840px] flex-col overflow-hidden bg-surface'
@@ -179,6 +200,10 @@ export function ConversationPage() {
             ? ({
                 top: chatBox?.top ?? 0,
                 bottom: chatBox?.bottom ?? 0,
+                // phones that do not resize the page: the bottom edge follows the keyboard smoothly
+                transition: 'bottom 260ms cubic-bezier(0.2, 0, 0, 1)',
+                // while the chat glides, the strip opening above it has the chat colour (otherwise hidden by the header)
+                boxShadow: '0 -480px 0 0 var(--color-surface)',
                 // with the keyboard open the gesture bar is hidden: no extra room under the input
                 ...(keyboardHeight ? { '--app-inset-bottom': '0px' } : {}),
               } as CSSProperties)

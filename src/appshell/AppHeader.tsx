@@ -6,6 +6,7 @@ import { Logo } from '../components/Logo'
 import { SearchBar } from '../components/SearchBar'
 import { Button } from '../components/ui/Button'
 import { parentRoute, type ScreenRoute } from './routes'
+import { OfflineBanner } from './Offline'
 import type { ScreenHeaderOptions } from './ScreenHeader'
 
 export function AppHeader({ route, options = {} }: { route: ScreenRoute; options?: ScreenHeaderOptions }) {
@@ -32,6 +33,8 @@ export function AppHeader({ route, options = {} }: { route: ScreenRoute; options
     <header
       className={`app-shell-header ${overlay ? 'app-shell-header-overlay' : 'bg-surface'} ${scroll > 0 && !overlay ? 'border-b border-line' : ''}`}
     >
+      {/* part of the header, under the phone status bar, so it never slides under the clock */}
+      <OfflineBanner />
       <div className="app-shell-width px-4 py-2">
         {kind === 'home' ? (
           <div className="flex flex-col gap-3">
