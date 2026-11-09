@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useLocation, useSearchParams } from 'react-router'
 import { useAuth } from '../features/auth/authContext'
 import { useProfile } from '../features/profile/hooks'
+import { IS_APP } from '../native/platform'
 import { LanguageSwitcher } from './LanguageSwitcher'
 import { Logo } from './Logo'
 import { SearchBar } from './SearchBar'
@@ -20,7 +21,7 @@ export const headerIconClass =
 function AdminLink({ userId }: { userId: string }) {
   const { t } = useTranslation()
   const profile = useProfile(userId)
-  if (profile.data?.role !== 'admin') return null
+  if (IS_APP || profile.data?.role !== 'admin') return null
   return (
     <Link to="/admin" aria-label={t('header.admin')} title={t('header.admin')} className={headerIconClass}>
       <Settings aria-hidden="true" className="size-5" strokeWidth={1.75} />

@@ -13,9 +13,23 @@
     "gen:types": "supabase gen types typescript --linked --schema public > src/lib/database.types.ts",
     "db:push": "supabase db push --linked",
     "db:seed": "supabase db query -f supabase/seed.sql --linked",
-    "db:test": "supabase db query -f supabase/tests/rls_check.sql --linked"
+    "db:test": "supabase db query -f supabase/tests/rls_check.sql --linked",
+    "build:app": "tsc -b && vite build --mode app",
+    "cap:sync": "npm run build:app && cap sync android",
+    "cap:open": "cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/clipboard": "^8.0.1",
+    "@capacitor/core": "^8.6.0",
+    "@capacitor/haptics": "^8.0.2",
+    "@capacitor/keyboard": "^8.0.6",
+    "@capacitor/network": "^8.0.1",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/share": "^8.0.3",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -35,6 +49,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.6.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",

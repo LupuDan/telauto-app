@@ -1,0 +1,24 @@
+- vite.config.ts:58 — build по умолчанию использует `/telauto/`; значение из `.env` не берётся через `env.VITE_BASE` — явно задать `base: './'` для native-сборки.
+- src/lib/siteUrl.ts:6 — BASE_URL относительно origin даст `https://localhost/` — отделить публичный URL сайта от адреса WebView.
+- src/features/auth/api.ts:30,42,48 — подтверждение email и сброс пароля направляются на localhost — настроить публичный callback/App Link и allowlist Supabase.
+- src/features/auth/authRedirect.ts:8; src/main.tsx:9 — callback обрабатывается только при старте страницы; обработчика `appUrlOpen` нет — принимать ссылки при холодном и повторном открытии приложения.
+- src/lib/supabase.ts:26 — PKCE требует verifier из исходного хранилища; внешний браузер его не получит — обменивать callback-код внутри приложения.
+- src/pages/ListingPage.tsx:85; src/features/listings/MyListings.tsx:152 — расшаривание отдаёт localhost — формировать публичный `https://…/#/a/id`.
+- src/pages/ListingPage.tsx:87–93; src/features/listings/MyListings.tsx:154–160 — доступность share/clipboard не гарантирована, ошибки молча скрываются — использовать Capacitor Share/Clipboard и показывать ошибки.
+- src/features/listingPage/SellerBox.tsx:98; src/pages/StaticPage.tsx:43 — `tel:`/`mailto:` зависят от нативной обработки — обеспечить запуск Android Intent и обработку отсутствующего приложения.
+- src/pages/RegisterPage.tsx:138,142 — `_blank` может не открыть правила и privacy в WebView — открывать внутренним маршрутом.
+- src/app/App.tsx:75 — нет обработки Android Back; src/pages/PublicProfilePage.tsx:97–101 обрабатывает только экранную кнопку — добавить Back с закрытием модальных окон, навигацией и выходом на корне.
+- src/features/listings/PhotoUploader.tsx:159; src/features/profile/AvatarField.tsx:53 — только HTML file picker, `capture` отсутствует — проверить native chooser; для явной съёмки добавить Camera.
+- src/features/listings/PhotoUploader.tsx:160; src/features/listings/photos.ts:31 — принимаются HEIC/HEIF без явного декодера — конвертировать нативно либо исключить неподдерживаемые форматы.
+- src/components/Header.tsx:79; src/features/listings/MyListings.tsx:206 — sticky top без верхнего inset — добавить safe-area при edge-to-edge.
+- src/components/ui/Sheet.tsx:74; src/features/listingPage/ListingGallery.tsx:181,206 — полноэкранные элементы без верхнего/нижнего inset — защитить заголовок, закрытие и счётчик safe-area.
+- src/components/CookieBanner.tsx:39; src/app/Layout.tsx:65 — на страницах со своей нижней панелью баннер ставится в `bottom-0`, перекрывает действия и не учитывает inset — учитывать `ownBar` и нижний safe-area.
+- index.html:6 — viewport без `viewport-fit=cover` — согласовать viewport и нативные системные inset; проверить edge-to-edge на устройстве.
+- src/app/App.tsx:25,29–31 — sessionStorage без try/catch может сорвать загрузку lazy-страниц — защитить обращения; reload не исправит отсутствующий файл в установленном bundle.
+- src/lib/supabase.ts:23; src/features/listings/draft.ts:8,19; src/i18n/index.ts:18,47; src/lib/theme.ts:20; src/components/CookieBanner.tsx:10,28 — данные браузера не перенесутся в WebView — предусмотреть повторный вход; при необходимости миграцию настроек/черновика.
+- src/features/listingPage/api.ts:124–127 — sessionStorage сбрасывает дедупликацию просмотров при новой сессии WebView — для устойчивого учёта перенести дедупликацию на сервер.
+- index.html:31,37; src/app/usePageMeta.ts:8 — OG жёстко привязан к GitHub Pages, canonical отсутствует, хук меняет только title/description — использовать публичный домен и отдельные web-preview URL.
+- src/pages/AdminPage.tsx:30; src/app/App.tsx:117 — админка включена в приложение, UI проверяет роль — серверные права обязательны; их корректность вне проверки (`supabase/` исключён).
+- vite.config.ts:28–38; src/lib/imageCompression.ts:9 — явной несовместимости CSP/локального worker с заданным origin не найдено; расширять CSP только под конкретные необходимые источники.
+- В разрешённых файлах не найдены service worker, `window.open`, ссылки WhatsApp/Viber/Telegram/карт; изменений и запуска тестов/сборки не было.
+- **3 главных риска:** неработающие email callback/PKCE; расшаривание localhost; перекрытие управления системными панелями и неверное поведение Android Back.

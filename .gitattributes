@@ -2,3 +2,6 @@
 *.png binary
 *.jpg binary
 *.webp binary
+# Windows batch files need CRLF line endings, the Gradle wrapper script needs LF
+*.bat text eol=crlf
+android/gradlew text eol=lf

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { matchPath, Outlet, useLocation } from 'react-router'
 import { BottomNav } from '../components/BottomNav'
 import { CookieBanner } from '../components/CookieBanner'
+import { IS_APP } from '../native/platform'
 import { Footer } from '../components/Footer'
 import { Header } from '../components/Header'
 import { LoadingState } from '../components/ui/LoadingState'
@@ -56,7 +57,8 @@ export function Layout() {
       </main>
       <Footer />
       {showBottomNav && <BottomNav />}
-      <CookieBanner aboveBottomNav={showBottomNav} />
+      {/* The app keeps its data in the app itself: the website storage notice is not needed. */}
+      {!IS_APP && <CookieBanner aboveBottomNav={showBottomNav} />}
       <Toaster />
     </div>
   )

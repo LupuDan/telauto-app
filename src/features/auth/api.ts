@@ -1,10 +1,12 @@
 import { getSiteBaseUrl } from '../../lib/siteUrl'
+import { APP_AUTH_URL, IS_APP } from '../../native/platform'
 import { supabase } from '../../lib/supabase'
 import type { Language } from '../../i18n'
 import { AppError } from './authErrors'
 
 function emailRedirect(flow: 'signup' | 'recovery'): string {
-  return `${getSiteBaseUrl()}?flow=${flow}`
+  // In the app the link must come back into the app (PKCE: the code can only be exchanged where it was requested).
+  return `${IS_APP ? APP_AUTH_URL : getSiteBaseUrl()}?flow=${flow}`
 }
 
 export async function signIn(email: string, password: string) {

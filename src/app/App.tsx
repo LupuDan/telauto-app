@@ -3,6 +3,7 @@ import { lazy, type ComponentType } from 'react'
 import { HashRouter, Route, Routes } from 'react-router'
 import { AuthProvider } from '../features/auth/AuthProvider'
 import { RequireAuth } from '../features/auth/RequireAuth'
+import { IS_APP } from '../native/platform'
 import { CategoryPage } from '../pages/CategoryPage'
 import { HomePage } from '../pages/HomePage'
 import { ListingPage } from '../pages/ListingPage'
@@ -104,7 +105,8 @@ export function App() {
                 <Route path="/a/:id/edit" element={<EditListingPage />} />
                 <Route path="/messages" element={<MessagesPage />} />
                 <Route path="/messages/:id" element={<ConversationPage />} />
-                <Route path="/admin" element={<AdminPage />} />
+                {/* The admin panel stays on the website only. */}
+                {!IS_APP && <Route path="/admin" element={<AdminPage />} />}
               </Route>
 
               <Route path="*" element={<NotFoundPage />} />

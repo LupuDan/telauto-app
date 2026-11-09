@@ -13,6 +13,7 @@ import { signOut } from '../auth/api'
 import { useAuth } from '../auth/authContext'
 import { avatarUrl } from '../profile/api'
 import { useProfile, useUpdateMyLanguage } from '../profile/hooks'
+import { IS_APP } from '../../native/platform'
 import { MenuList, MenuRow } from './parts'
 import { HAS_GARAGE, useAccountSummary } from './useAccountSummary'
 
@@ -156,7 +157,7 @@ function SectionsMenu() {
         label={t('account.settings.title')}
         active={isActive('/account/settings')}
       />
-      {profile.data?.role === 'admin' && <MenuRow to="/admin" Icon={ShieldCheck} label={t('admin.openPanel')} />}
+      {!IS_APP && profile.data?.role === 'admin' && <MenuRow to="/admin" Icon={ShieldCheck} label={t('admin.openPanel')} />}
       <MenuRow to="/p/help" Icon={LifeBuoy} label={t('account.help')} />
     </MenuList>
   )

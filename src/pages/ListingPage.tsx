@@ -29,6 +29,7 @@ import { ReportButton } from '../features/reports/ReportButton'
 import { useSearchListings } from '../features/search/api'
 import { categoryById, trustBadges, type CategoryConfig } from '../lib/categories'
 import { formatListingDate, formatPrice, localizedName } from '../lib/format'
+import { getSiteBaseUrl } from '../lib/siteUrl'
 import { toast } from '../lib/toast'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -82,7 +83,7 @@ export function ListingPage() {
 function ShareButton({ title }: { title: string }) {
   const { t } = useTranslation()
   async function share() {
-    const url = window.location.href
+    const url = getSiteBaseUrl() + window.location.hash
     try {
       if (navigator.share) await navigator.share({ title, url })
       else {

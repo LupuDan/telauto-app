@@ -55,7 +55,8 @@ function contentSecurityPolicy(supabaseUrl: string | undefined): Plugin {
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd())
   return {
-    base: process.env.VITE_BASE ?? (command === 'build' ? '/telauto/' : '/'),
+    // The Android app (`npm run build:app`, mode "app") loads its files from the app itself: relative paths.
+    base: mode === 'app' ? './' : (process.env.VITE_BASE ?? (command === 'build' ? '/telauto/' : '/')),
     plugins: [react(), tailwindcss(), contentSecurityPolicy(env.VITE_SUPABASE_URL)],
     // npm test: unit tests for validations and filters (they do not need a browser or Supabase)
     test: {

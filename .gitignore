@@ -27,3 +27,8 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# Android app signing (never commit: kept only by the owner and in GitHub Secrets)
+*.keystore
+*.jks
+keystore.properties

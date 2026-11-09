@@ -2,11 +2,16 @@
  * Email links (confirm account, reset password) come back to the site root as
  *   https://.../telauto/?flow=signup&code=XYZ           (success, PKCE flow)
  *   https://.../telauto/?flow=signup#error=...&error_code=otp_expired   (failure)
- * HashRouter only looks at the part after "#", so before the app starts we move these
- * values into the route "#/auth/confirm?..." and remove them from the address bar.
+ * In the Android app they come back as md.telauto.app://auth/?flow=signup&code=XYZ (see src/native/deepLinks.ts).
+ * HashRouter only looks at the part after "#", so we turn these values into the route "#/auth/confirm?...".
  */
-export function captureAuthRedirect(): void {
-  const url = new URL(window.location.href)
+export function authConfirmRoute(href: string): string | null {
+  let url: URL
+  try {
+    url = new URL(href)
+  } catch {
+    return null
+  }
   const query = url.searchParams
   const hashParams = /^#(error|error_code|access_token)=/.test(url.hash)
     ? new URLSearchParams(url.hash.slice(1))
@@ -17,7 +22,7 @@ export function captureAuthRedirect(): void {
     query.get('error_code') ?? hashParams?.get('error_code') ?? query.get('error') ?? hashParams?.get('error')
 
   if (!code && !errorCode) {
-    return
+    return null
   }
 
   const route = new URLSearchParams()
@@ -25,6 +30,13 @@ export function captureAuthRedirect(): void {
   if (errorCode) route.set('error_code', errorCode)
   const flow = query.get('flow')
   if (flow === 'signup' || flow === 'recovery') route.set('flow', flow)
+  return `#/auth/confirm?${route.toString()}`
+}
 
-  window.history.replaceState(null, '', `${url.origin}${url.pathname}#/auth/confirm?${route.toString()}`)
+/** Before the app starts: move the email link values into the hash route and remove them from the address bar. */
+export function captureAuthRedirect(): void {
+  const route = authConfirmRoute(window.location.href)
+  if (!route) return
+  const url = new URL(window.location.href)
+  window.history.replaceState(null, '', `${url.origin}${url.pathname}${route}`)
 }
