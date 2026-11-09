@@ -1,5 +1,6 @@
 /// <reference types="vitest/config" />
 import { createHash } from 'node:crypto'
+import { fileURLToPath } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
@@ -40,8 +41,16 @@ function contentSecurityPolicy(supabaseUrl: string | undefined): Plugin {
         return {
           html,
           tags: [
-            { tag: 'meta', attrs: { 'http-equiv': 'Content-Security-Policy', content: policy }, injectTo: 'head-prepend' },
-            { tag: 'meta', attrs: { name: 'referrer', content: 'strict-origin-when-cross-origin' }, injectTo: 'head-prepend' },
+            {
+              tag: 'meta',
+              attrs: { 'http-equiv': 'Content-Security-Policy', content: policy },
+              injectTo: 'head-prepend',
+            },
+            {
+              tag: 'meta',
+              attrs: { name: 'referrer', content: 'strict-origin-when-cross-origin' },
+              injectTo: 'head-prepend',
+            },
           ],
         }
       },
@@ -57,6 +66,14 @@ export default defineConfig(({ command, mode }) => {
   return {
     // The Android app (`npm run build:app`, mode "app") loads its files from the app itself: relative paths.
     base: mode === 'app' ? './' : (process.env.VITE_BASE ?? (command === 'build' ? '/telauto/' : '/')),
+    ...(mode === 'app'
+      ? {
+          define: { 'import.meta.env.VITE_APP_BUILD_VERSION': JSON.stringify(new Date().toISOString()) },
+          resolve: {
+            alias: { './EntryPages': fileURLToPath(new URL('./src/app/AppEntryPages.tsx', import.meta.url)) },
+          },
+        }
+      : {}),
     plugins: [react(), tailwindcss(), contentSecurityPolicy(env.VITE_SUPABASE_URL)],
     // npm test: unit tests for validations and filters (they do not need a browser or Supabase)
     test: {

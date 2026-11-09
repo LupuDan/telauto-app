@@ -48,6 +48,8 @@ export function ListingCard({
           <img
             src={coverUrl ?? publicPhotoUrl(listing.coverPath ?? '')}
             alt=""
+            width={400}
+            height={300}
             loading="lazy"
             decoding="async"
             className="absolute inset-0 size-full object-cover"
@@ -71,7 +73,10 @@ export function ListingCard({
         {facts.length > 0 && (
           <ul className="flex flex-wrap gap-1" aria-label={t('listing.characteristics')}>
             {facts.map((fact) => (
-              <li key={fact} className="max-w-full truncate rounded-full bg-paper px-2 py-0.5 type-micro text-ink tabular">
+              <li
+                key={fact}
+                className="max-w-full truncate rounded-full bg-paper px-2 py-0.5 type-micro text-ink tabular"
+              >
                 {fact}
               </li>
             ))}
