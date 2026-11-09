@@ -1,3 +1,4 @@
+import { IS_APP } from '../native'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -78,7 +79,7 @@ export function RegisterPage() {
       <AuthCard title={t('auth.registerSuccessTitle')}>
         <div className="space-y-4">
           <p className="text-ink">{t('auth.registerSuccessText', { email: sentTo })}</p>
-          <p className="text-sm text-muted">{t('auth.registerSuccessHint')}</p>
+          <p className="text-sm text-muted">{t(IS_APP ? 'appShell.checkEmailOnPhone' : 'auth.registerSuccessHint')}</p>
           {errorKey && <Alert kind="error">{translateKey(t, errorKey)}</Alert>}
           {resendState === 'sent' ? (
             <Alert kind="success">{t('auth.resendSuccess')}</Alert>

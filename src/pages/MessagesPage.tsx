@@ -1,3 +1,5 @@
+import { useScreenHeader } from '../appshell'
+import { IS_APP } from '../native'
 import { MessageCircle } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -10,6 +12,7 @@ import { ConversationList } from '../features/messages/ConversationList'
  */
 export function MessagesPage() {
   const { t } = useTranslation()
+  useScreenHeader(IS_APP ? { title: t('messages.title') } : {})
   usePageMeta(t('messages.metaTitle'))
 
   return (
@@ -36,13 +39,30 @@ export function MessagesLayout({
   showListOnPhone?: boolean
 }) {
   const { t } = useTranslation()
+  if (IS_APP) return <div className="min-h-0">{showListOnPhone ? list : children}</div>
   return (
-    <div className="lg:grid lg:h-[calc(100dvh-10rem)] lg:min-h-[32rem] lg:grid-cols-[360px_minmax(0,1fr)] lg:overflow-hidden lg:rounded-panel lg:border lg:border-line lg:bg-surface">
+    <div
+      className={
+        IS_APP
+          ? ''
+          : 'lg:grid lg:h-[calc(100dvh-10rem)] lg:min-h-[32rem] lg:grid-cols-[360px_minmax(0,1fr)] lg:overflow-hidden lg:rounded-panel lg:border lg:border-line lg:bg-surface'
+      }
+    >
       <section
         aria-label={t('messages.title')}
-        className={`${showListOnPhone ? '' : 'hidden'} lg:flex lg:min-h-0 lg:flex-col lg:border-r lg:border-line`}
+        className={
+          IS_APP
+            ? showListOnPhone
+              ? ''
+              : 'hidden'
+            : `${showListOnPhone ? '' : 'hidden'} lg:flex lg:min-h-0 lg:flex-col lg:border-r lg:border-line`
+        }
       >
-        <h1 className="mb-4 type-h1 text-ink lg:mb-0 lg:border-b lg:border-line lg:px-4 lg:py-3 lg:type-h2">
+        <h1
+          className={
+            IS_APP ? 'sr-only' : 'mb-4 type-h1 text-ink lg:mb-0 lg:border-b lg:border-line lg:px-4 lg:py-3 lg:type-h2'
+          }
+        >
           {t('messages.title')}
         </h1>
         <div className="-mx-4 border-y border-line bg-surface md:mx-0 md:rounded-card md:border lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:rounded-none lg:border-0">

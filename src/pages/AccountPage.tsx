@@ -1,3 +1,4 @@
+import { IS_APP } from '../native'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, Outlet, useSearchParams } from 'react-router'
 import { usePageMeta } from '../app/usePageMeta'
@@ -11,12 +12,7 @@ import { GarageList } from '../features/garage/GarageList'
 import { MyListings } from '../features/listings/MyListings'
 import { useIsDesktop } from '../lib/useIsDesktop'
 
-export {
-  DeleteAccountScreen,
-  ProfileScreen,
-  SecurityScreen,
-  SettingsMenu,
-} from '../features/account/SettingsScreens'
+export { DeleteAccountScreen, ProfileScreen, SecurityScreen, SettingsMenu } from '../features/account/SettingsScreens'
 
 /**
  * "Contul meu" (plan de design, 6.6). Every section has its own route, so the phone's back button works:
@@ -27,7 +23,7 @@ export {
  */
 export function AccountPage() {
   const { user, loading } = useAuth()
-  const isDesktop = useIsDesktop()
+  const isDesktop = useIsDesktop() && !IS_APP
 
   if (loading) return <LoadingState />
   if (!user || !isDesktop) {
@@ -58,7 +54,7 @@ export function AccountIndex() {
   const { t } = useTranslation()
   usePageMeta(t('account.metaTitle'))
   const { user } = useAuth()
-  const isDesktop = useIsDesktop()
+  const isDesktop = useIsDesktop() && !IS_APP
   const [params] = useSearchParams()
   const tab = params.get('tab')
 

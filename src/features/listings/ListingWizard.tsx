@@ -1,7 +1,10 @@
+import { appBottomPanelClass, useScreenHeader } from '../../appshell'
+import { haptic, IS_APP, useBackHandler } from '../../native'
+import { Sheet } from '../../components/ui/Sheet'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronLeft } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Controller, FormProvider, useForm, useFormContext, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -69,14 +72,39 @@ export function ListingWizard(props: Props) {
   const categorySlug = useWatch({ control, name: 'categorySlug' })
   const category = categoryBySlug(categorySlug)
 
-  const steps = props.mode === 'edit' ? WIZARD_STEPS.filter((s) => s !== 'category') : WIZARD_STEPS
+  const steps = useMemo(
+    () => (props.mode === 'edit' ? WIZARD_STEPS.filter((s) => s !== 'category') : WIZARD_STEPS),
+    [props.mode],
+  )
   const [step, setStep] = useState<WizardStep>(steps[0])
   const [photos, setPhotos] = useState<PhotoItem[]>(props.initialPhotos ?? [])
   const [photoError, setPhotoError] = useState<string>()
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [progress, setProgress] = useState<SaveProgress | null>(null)
 
+  const [leaveOpen, setLeaveOpen] = useState(false)
   const stepIndex = steps.indexOf(step)
+  const back = useCallback(() => {
+    if (progress) return
+    if (stepIndex > 0) {
+      setStep(steps[stepIndex - 1])
+      window.scrollTo({ top: 0 })
+      return
+    }
+    const filled =
+      methods.formState.isDirty || photos.length > 0 || JSON.stringify(getValues()) !== JSON.stringify(EMPTY_LISTING)
+    if (filled) setLeaveOpen(true)
+    else if (window.history.state?.idx > 0) navigate(-1)
+    else navigate('/account', { replace: true })
+  }, [progress, stepIndex, steps, methods.formState.isDirty, photos.length, getValues, navigate])
+  useBackHandler(() => {
+    if (leaveOpen) setLeaveOpen(false)
+    else back()
+    return true
+  })
+  useScreenHeader(
+    IS_APP ? { title: t(props.mode === 'new' ? 'listingForm.newTitle' : 'listingForm.editTitle'), onBack: back } : {},
+  )
   const isDraftEdit = props.mode === 'edit' && props.status === 'draft'
   const willPublish = props.mode === 'new' || isDraftEdit
 
@@ -144,6 +172,7 @@ export function ListingWizard(props: Props) {
         void queryClient.invalidateQueries({ queryKey: listingKeys.edit(props.listingId) })
       }
       void queryClient.invalidateQueries({ queryKey: listingKeys.mine(user.id) })
+      if (IS_APP && willPublish) haptic('success')
       navigate(`/account/listings?notice=${willPublish ? 'published' : 'saved'}&id=${savedId}`, { replace: true })
     } catch (error) {
       setProgress(null)
@@ -172,6 +201,24 @@ export function ListingWizard(props: Props) {
 
   return (
     <FormProvider {...methods}>
+      {IS_APP && (
+        <Sheet open={leaveOpen} onClose={() => setLeaveOpen(false)} title={t('appShell.leaveFormTitle')}>
+          <p className="mb-4 text-muted">{t('appShell.leaveFormText')}</p>
+          <div className="flex gap-3">
+            <Button
+              onClick={() => {
+                if (props.mode === 'new') saveLocalDraft(getValues())
+                navigate(-1)
+              }}
+            >
+              {t('appShell.leave')}
+            </Button>
+            <Button variant="secondary" onClick={() => setLeaveOpen(false)}>
+              {t('appShell.stay')}
+            </Button>
+          </div>
+        </Sheet>
+      )}
       <form
         onSubmit={(event) => {
           // Enter in a field moves to the next step; only the last step really submits.
@@ -264,7 +311,13 @@ export function ListingWizard(props: Props) {
           (plan de design, 6.4). On computers both sit under the form.
         */}
         {step !== 'category' && (
-          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface px-4 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-float lg:static lg:mt-4 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+          <div
+            className={
+              IS_APP
+                ? appBottomPanelClass + ' z-30 border-t border-line bg-surface px-4 pt-1 pb-3 shadow-float'
+                : 'fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface px-4 pt-1 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-float lg:static lg:mt-4 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none'
+            }
+          >
             <div className="mx-auto flex max-w-xl flex-col lg:mx-0 lg:max-w-none lg:flex-row lg:items-center lg:justify-between">
               {stepIndex > 0 ? (
                 <button
@@ -352,7 +405,10 @@ function StepIndicator({ steps, current }: { steps: WizardStep[]; current: numbe
       <div className="lg:hidden">
         <p className="mb-2 text-sm font-medium text-ink">
           {stepOf}
-          <span className="font-normal text-muted"> · {translateKey(t, `listingForm.stepNames.${steps[current]}`)}</span>
+          <span className="font-normal text-muted">
+            {' '}
+            · {translateKey(t, `listingForm.stepNames.${steps[current]}`)}
+          </span>
         </p>
         <div
           role="progressbar"
@@ -373,7 +429,11 @@ function StepIndicator({ steps, current }: { steps: WizardStep[]; current: numbe
           const done = index < current
           const active = index === current
           return (
-            <li key={step} className="flex flex-1 items-center gap-2 last:flex-none" aria-current={active ? 'step' : undefined}>
+            <li
+              key={step}
+              className="flex flex-1 items-center gap-2 last:flex-none"
+              aria-current={active ? 'step' : undefined}
+            >
               <span
                 className={`flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold tabular ${
                   active ? 'bg-brand text-white' : done ? 'bg-brand-50 text-brand' : 'bg-line text-muted'

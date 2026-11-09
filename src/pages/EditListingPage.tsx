@@ -1,3 +1,4 @@
+import { IS_APP } from '../native'
 import { useTranslation } from 'react-i18next'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { usePageMeta } from '../app/usePageMeta'
@@ -38,7 +39,7 @@ export function EditListingPage() {
 
   return (
     <div>
-      <h1 className="mx-auto mb-4 max-w-3xl type-h1 text-ink">
+      <h1 className={IS_APP ? 'sr-only' : 'mx-auto mb-4 max-w-3xl type-h1 text-ink'}>
         {data.status === 'draft' ? t('listingForm.finishDraftTitle') : t('listingForm.editTitle')}
       </h1>
 
