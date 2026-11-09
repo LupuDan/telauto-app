@@ -11,6 +11,7 @@ import { NotFoundPage } from '../pages/NotFoundPage'
 import { SearchPage } from '../pages/SearchPage'
 import { HAS_GARAGE } from '../lib/categories'
 import { Layout } from './Layout'
+import { AppLayout } from '../appshell'
 
 // The pages most visitors open (home, category, search, listing) are in the main file.
 // The others are downloaded only when opened, so the first visit on a phone is faster.
@@ -32,8 +33,8 @@ const page = <K extends string>(load: () => Promise<Record<K, ComponentType>>, n
           window.location.reload()
         }
         throw error
-      },
-    ),
+      }
+    )
   )
 
 const accountModule = () => import('../pages/AccountPage')
@@ -73,7 +74,8 @@ export function App() {
         {/* HashRouter (#/...) because GitHub Pages cannot serve SPA routes on reload. */}
         <HashRouter>
           <Routes>
-            <Route element={<Layout />}>
+            {/* the Android app has its own shell (headers per screen, bottom bar on main screens): PLAN_DESIGN_APP.md */}
+            <Route element={IS_APP ? <AppLayout /> : <Layout />}>
               <Route index element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />

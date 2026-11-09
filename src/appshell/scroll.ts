@@ -15,7 +15,7 @@ export function useScrollRestoration() {
   }, [])
   useLayoutEffect(() => {
     const savedPositions = positions.current
-    const target = navigation === 'POP' ? (savedPositions.get(location.key) ?? 0) : 0
+    const target = navigation === 'POP' ? savedPositions.get(location.key) ?? 0 : 0
     let restoring = true
     const restore = () => window.scrollTo({ top: target, behavior: 'instant' })
     restore()
@@ -36,7 +36,7 @@ export function useScrollRestoration() {
     window.addEventListener('touchstart', stop, { passive: true })
     window.addEventListener('keydown', stop)
     return () => {
-      savedPositions.set(location.key, window.scrollY)
+      // no saving here: by now the next screen (or its loading placeholder) may already have moved the page to the top
       observer.disconnect()
       window.clearTimeout(timer)
       window.removeEventListener('scroll', save)

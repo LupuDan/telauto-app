@@ -37,7 +37,7 @@ function ScreenFrame({ outlet }: { outlet: ReactNode }) {
           if (
             previous?.owner === owner &&
             Object.keys(options).every(
-              (key) => options[key as keyof ScreenHeaderOptions] === previous.options[key as keyof ScreenHeaderOptions],
+              (key) => options[key as keyof ScreenHeaderOptions] === previous.options[key as keyof ScreenHeaderOptions]
             ) &&
             Object.keys(options).length === Object.keys(previous.options).length
           )
@@ -46,7 +46,7 @@ function ScreenFrame({ outlet }: { outlet: ReactNode }) {
         }),
       clear: (owner: symbol) => setOverride((previous) => (previous?.owner === owner ? null : previous)),
     }),
-    [],
+    []
   )
   useScrollRestoration()
   const ownBar = /^\/a\/[^/]+(?:\/edit)?\/?$/.test(location.pathname) || location.pathname === '/new'
@@ -59,7 +59,9 @@ function ScreenFrame({ outlet }: { outlet: ReactNode }) {
   return (
     <ScreenHeaderContext.Provider value={context}>
       <div
-        className={`app-shell min-h-dvh bg-paper text-ink ${route.kind === 'main' || ownBar ? 'app-shell-with-bottom' : ''}`}
+        className={`app-shell min-h-dvh bg-paper text-ink ${
+          route.kind === 'main' || ownBar ? 'app-shell-with-bottom' : ''
+        }`}
       >
         <a
           href="#main"
@@ -115,6 +117,9 @@ export function AppLayout() {
     const transition = document.startViewTransition(() => {
       flushSync(commit)
     })
+    // skipping a transition (fast taps) rejects these promises: that is expected, not an error
+    void transition.ready.catch(() => {})
+    void transition.updateCallbackDone.catch(() => {})
     pending.current = transition
     void transition.finished
       .catch(() => {})
