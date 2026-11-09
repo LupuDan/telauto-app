@@ -54,17 +54,19 @@ export function ConversationPage() {
 
   const keyboardHeight = useKeyboardHeight()
   // App: the chat is a fixed layer between the screen header and the keyboard (or the bottom of the screen).
-  // Android may or may not shrink the page when the keyboard opens; only the part of the keyboard
-  // that still covers the page is added at the bottom, so the input never jumps to the middle.
-  const fullHeight = useRef(window.innerHeight)
+  // Most phones shrink the page themselves when the keyboard opens (sometimes before the keyboard event
+  // arrives); then nothing is added. Only if the page did not shrink is the keyboard height added at the bottom.
+  const tallest = useRef({ width: window.innerWidth, height: window.innerHeight })
   const [chatBox, setChatBox] = useState<{ top: number; bottom: number }>()
   useLayoutEffect(() => {
     if (!IS_APP) return
     const update = () => {
-      if (!keyboardHeight) fullHeight.current = window.innerHeight
-      const shrunkBy = Math.max(0, fullHeight.current - window.innerHeight)
+      const seen = tallest.current
+      if (seen.width !== window.innerWidth) tallest.current = { width: window.innerWidth, height: window.innerHeight }
+      else if (window.innerHeight > seen.height) seen.height = window.innerHeight
+      const pageShrank = tallest.current.height - window.innerHeight > 80
       const header = document.querySelector('.app-shell-header')?.getBoundingClientRect().bottom ?? 0
-      setChatBox({ top: Math.max(0, Math.round(header)), bottom: Math.max(0, keyboardHeight - shrunkBy) })
+      setChatBox({ top: Math.max(0, Math.round(header)), bottom: pageShrank ? 0 : keyboardHeight })
     }
     update()
     window.addEventListener('resize', update)
